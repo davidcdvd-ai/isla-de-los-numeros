@@ -706,38 +706,79 @@ function confetti(n = 70) {
   }
   document.body.appendChild(c); setTimeout(() => c.remove(), 5000);
 }
+// WAV silencioso (0,5 s) para el truco del iPhone antiguo: lo genera el propio navegador
+function silentWav() {
+  const n = 4000, buf = new Uint8Array(44 + n), v = new DataView(buf.buffer);
+  const str = (o, t) => { for (let i = 0; i < t.length; i++) buf[o + i] = t.charCodeAt(i); };
+  str(0, 'RIFF'); v.setUint32(4, 36 + n, true); str(8, 'WAVEfmt '); v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 8000, true);
+  v.setUint16(32, 1, true); v.setUint16(34, 8, true); str(36, 'data'); v.setUint32(40, n, true);
+  buf.fill(128, 44);
+  let bin = ''; for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+  return 'data:audio/wav;base64,' + btoa(bin);
+}
 const Sound = {
-  ctx: null,
+  ctx: null, master: null, unlocked: false, el: null,
   get on() { return Store.data.sound !== false; },
-  ensure() {
+  // Se llama en cada toque: el audio solo puede arrancar o reanudarse dentro de un gesto (iPhone y Android)
+  unlock() {
+    if (!this.on) return null;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    // iPhone (Safari 17 o posterior): que suene aunque el interruptor de silencio esté activado
+    try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) {}
     if (!this.ctx) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return null;
       try { this.ctx = new AC(); } catch (e) { return null; }
+      const comp = this.ctx.createDynamicsCompressor(); // sube el volumen sin distorsionar
+      comp.threshold.value = -14; comp.knee.value = 8; comp.ratio.value = 6; comp.attack.value = 0.002; comp.release.value = 0.12;
+      this.master = this.ctx.createGain(); this.master.gain.value = 1;
+      this.master.connect(comp); comp.connect(this.ctx.destination); this.out = comp;
     }
-    if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+    // «suspended» en Android y escritorio; «interrupted» en iPhone tras bloquear o cambiar de app
+    if (this.ctx.state !== 'running') { try { const r = this.ctx.resume(); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
+    if (!this.unlocked) {
+      this.unlocked = true;
+      try { const s = this.ctx.createBufferSource(); s.buffer = this.ctx.createBuffer(1, 1, 22050); s.connect(this.ctx.destination); s.start(0); } catch (e) {}
+      this.iosFallback();
+    }
+    if (this.el && this.el.paused && !document.hidden) { const p = this.el.play(); if (p && p.catch) p.catch(() => {}); }
     return this.ctx;
   },
-  tone(f, at, dur, type, vol) {
-    const c = this.ctx, t = c.currentTime + at, o = c.createOscillator(), g = c.createGain();
-    o.type = type; o.frequency.setValueAtTime(f, t);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.05);
+  // iPhone con iOS 16 o anterior (sin audioSession): un audio HTML silencioso en bucle evita que el interruptor de silencio apague los efectos
+  iosFallback() {
+    if (navigator.audioSession) return;
+    const iOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!iOS) return;
+    const a = document.createElement('audio');
+    a.setAttribute('x-webkit-airplay', 'deny'); a.setAttribute('playsinline', ''); a.loop = true; a.preload = 'auto'; a.src = silentWav();
+    this.el = a;
+    document.addEventListener('visibilitychange', () => { if (document.hidden) a.pause(); });
   },
+  stop() { if (this.el) this.el.pause(); },
+  tone(f, at, dur, type, vol, f2) {
+    const c = this.ctx, t = c.currentTime + 0.01 + at, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur * 0.7);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dur + 0.05);
+  },
+  // Tonos agudos y con armónicos: se oyen bien en el altavoz pequeño de un móvil
   play(name) {
-    if (!this.on || !this.ensure()) return;
-    const T = (f, at, dur, type = 'triangle', vol = 0.1) => this.tone(f, at, dur, type, vol);
+    if (!this.on) return;
+    if (!this.ctx && !this.unlock()) return;
+    if (this.ctx.state !== 'running') { try { this.ctx.resume().catch(() => {}); } catch (e) {} }
+    const T = (f, at, dur, type, vol, f2) => this.tone(f, at, dur, type, vol, f2);
     try {
       switch (name) {
-        case 'tap': T(660, 0, 0.06, 'triangle', 0.04); break;
-        case 'tick': T(1320, 0, 0.08, 'sine', 0.05); break;
-        case 'ok': [523, 659, 784].forEach((f, i) => T(f, i * 0.09, 0.2, 'triangle', 0.12)); break;
-        case 'try': T(440, 0, 0.16, 'sine', 0.08); T(392, 0.14, 0.22, 'sine', 0.08); break;
-        case 'hint': T(587, 0, 0.12, 'sine', 0.07); T(880, 0.1, 0.2, 'sine', 0.06); break;
-        case 'step': T(740, 0, 0.08, 'triangle', 0.05); break;
-        case 'pop': T(880, 0, 0.08, 'sine', 0.07); T(1175, 0.06, 0.1, 'sine', 0.06); break;
-        case 'level': [523, 659, 784, 1047, 1319].forEach((f, i) => T(f, i * 0.07, 0.22, 'triangle', 0.1)); break;
-        case 'win': [[523, 0], [659, .12], [784, .24], [1047, .36], [784, .54], [1047, .66]].forEach(([f, t]) => T(f, t, 0.28, 'triangle', 0.13)); break;
+        case 'tap': T(1047, 0, 0.06, 'square', 0.1); break;
+        case 'tick': T(1568, 0, 0.09, 'triangle', 0.3); T(2093, 0.03, 0.09, 'sine', 0.2); break;
+        case 'ok': [1047, 1319, 1568].forEach((f, i) => { T(f, i * 0.08, 0.22, 'triangle', 0.42); T(f, i * 0.08, 0.12, 'square', 0.06); }); T(2093, 0.26, 0.3, 'sine', 0.3); break;
+        case 'try': T(784, 0, 0.16, 'triangle', 0.36); T(659, 0.15, 0.22, 'triangle', 0.36); break;
+        case 'hint': T(880, 0, 0.14, 'triangle', 0.32); T(1175, 0.11, 0.22, 'triangle', 0.32); break;
+        case 'step': T(988, 0, 0.08, 'triangle', 0.28); break;
+        case 'pop': T(1319, 0, 0.12, 'sine', 0.42, 1976); break;
+        case 'level': [1047, 1319, 1568, 2093, 2637].forEach((f, i) => T(f, i * 0.07, 0.24, 'triangle', 0.36)); break;
+        case 'win': [[784, 0], [1047, .12], [1319, .24], [1568, .36], [1319, .54], [1568, .66], [2093, .78]].forEach(([f, t], i) => { T(f, t, i === 6 ? 0.5 : 0.24, 'triangle', 0.42); T(f, t, 0.1, 'square', 0.06); }); break;
       }
     } catch (e) { /* sin sonido no pasa nada */ }
   }
@@ -1694,7 +1735,12 @@ function bind() {
   });
   $('#toProfiles').addEventListener('click', () => { prof = null; M = null; showProfiles(); });
   $('#toMedals').addEventListener('click', showMedals);
-  $('#soundBtn').addEventListener('click', () => { Store.data.sound = !Sound.on; Store.save(); updateSoundBtn(); Sound.play('pop'); });
+  $('#soundBtn').addEventListener('click', () => {
+    Store.data.sound = !Sound.on; Store.save(); updateSoundBtn();
+    if (Sound.on) { Sound.unlock(); Sound.play('pop'); } else Sound.stop();
+  });
+  // Cualquier toque o tecla prepara el audio, así el primer sonido ya no se pierde
+  ['touchend', 'pointerup', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, () => Sound.unlock(), {capture: true, passive: true}));
   $('#medalsBack').addEventListener('click', showMap);
   $('#backMap').addEventListener('click', () => { M = null; input = ''; showMap(); });
   $('#winMap').addEventListener('click', showMap);

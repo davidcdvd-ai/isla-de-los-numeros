@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>La isla de los números</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Aventura para aprender sumas, restas, multiplicaciones y repartos con Kiko.">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#5cc8e2">
+<meta name="application-name" content="Isla números">
+<meta name="apple-mobile-web-app-title" content="Isla números">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 /* Concepto: mapa de isla del tesoro; tarjetas de papel claro flotando sobre un mar turquesa. Un solo aspecto luminoso, elegido a propósito. */
 :root{
@@ -368,6 +379,10 @@ label.lbl{font-weight:800; display:block; margin-bottom:6px}
   .zones{grid-template-columns:1fr}
   .key{min-height:58px}
   .hero .kiko{width:80px; height:80px}
+}
+/* Abierta desde el icono de inicio, sin barras del navegador: respeta la muesca y la barra inferior */
+@media (display-mode: standalone){
+  .app{padding-top:calc(14px + env(safe-area-inset-top, 0px)); padding-bottom:calc(40px + env(safe-area-inset-bottom, 0px))}
 }
 @media (prefers-reduced-motion: reduce){
   *{animation:none !important; transition:none !important}

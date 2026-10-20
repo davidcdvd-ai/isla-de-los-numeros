@@ -1,0 +1,1429 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La isla de los números</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Concepto: mapa de isla del tesoro; tarjetas de papel claro flotando sobre un mar turquesa. Un solo aspecto luminoso, elegido a propósito. */
+:root{
+  --sea:#2bb3d6; --sea-deep:#11729f; --sea-light:#bfeaf5;
+  --sand:#ffe7a8; --sand-deep:#f3c96b;
+  --leaf:#2f8f45; --leaf-soft:#dcf3cf;
+  --coral:#e8553f; --sun:#ffc23d; --plum:#7a4cc4; --berry:#d23f6c;
+  --ink:#1d2f44; --ink-soft:#4b5e74; --paper:#fffdf5; --paper-2:#fff6dd; --line:#e6d9b6;
+  --ok:#23803a; --okbg:#e2f5dc; --helpbg:#fff3c8; --helpline:#f0c64d;
+  --ca:#f27a1f; --cb:#2f6fd0; --cc:#2f8f45;
+  --add:#e8553f; --sub:#2f8f45; --mul:#7a4cc4; --div:#11729f;
+  --font: "Trebuchet MS","Segoe UI","Nunito","Helvetica Neue",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --font-display: "Arial Rounded MT Bold","Trebuchet MS","Segoe UI",system-ui,-apple-system,sans-serif;
+  --r: 18px;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html{min-height:100%; background:#1f9cc4}
+body{
+  margin:0; font-family:var(--font); color:var(--ink); font-size:18px; line-height:1.4;
+  min-height:100vh;
+  background: radial-gradient(circle at 20% 0%, #7fd8ec 0, transparent 45%) no-repeat, linear-gradient(180deg,#5cc8e2 0, var(--sea) 600px, #1f9cc4 100%);
+  -webkit-tap-highlight-color: transparent;
+}
+button{font-family:inherit; color:inherit; touch-action:manipulation}
+button:focus-visible, [tabindex]:focus-visible, input:focus-visible{outline:4px solid var(--sun); outline-offset:2px}
+.app{max-width:980px; margin:0 auto; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:14px 40px}
+.screen{display:flex; flex-direction:column; gap:14px}
+h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0; line-height:1.15}
+.card{background:var(--paper); border-radius:var(--r); padding:18px; box-shadow:0 4px 0 rgba(10,60,90,.18)}
+.muted{color:var(--ink-soft)}
+.small{font-size:.9rem}
+
+/* Botones */
+.btn{border:0; border-radius:14px; padding:14px 20px; min-height:56px; font-size:1.1rem; font-weight:700; cursor:pointer;
+  background:var(--sun); color:var(--ink); box-shadow:0 4px 0 #c98f12; display:inline-flex; align-items:center; justify-content:center; gap:8px; text-align:center}
+.btn:active{transform:translateY(3px); box-shadow:0 1px 0 #c98f12}
+.btn[disabled]{opacity:.5; cursor:default}
+.btn.go{background:var(--leaf); color:#fff; box-shadow:0 4px 0 #1d6630}
+.btn.go:active{box-shadow:0 1px 0 #1d6630}
+.btn.ghost{background:#fff; box-shadow:0 3px 0 var(--line); color:var(--ink)}
+.btn.ghost:active{box-shadow:0 1px 0 var(--line)}
+.btn.help{background:#fff; color:var(--ink); box-shadow:0 4px 0 var(--helpline); border:3px solid var(--helpline)}
+.btn.step{background:var(--plum); color:#fff; box-shadow:0 4px 0 #533290}
+.btn.step:active{box-shadow:0 1px 0 #533290}
+.btn.danger{background:#fff; color:var(--berry); box-shadow:0 3px 0 #f0b8c8; border:2px solid #f0b8c8}
+.btn.sm{min-height:46px; padding:8px 14px; font-size:1rem}
+.row{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.spacer{flex:1}
+
+/* Aviso de guardado */
+.banner{border-radius:14px; padding:12px 16px; font-size:1rem; background:var(--helpbg); border:2px solid var(--helpline)}
+.banner.info{background:#eaf8fc; border-color:#9fd9ea}
+
+/* Perfiles */
+.hero{display:flex; gap:16px; align-items:center}
+.hero .kiko{width:110px; height:110px; flex:none}
+.hero h1{font-size:clamp(1.9rem, 6vw, 3rem); color:#fff; text-shadow:0 3px 0 var(--sea-deep)}
+.hero p{margin:4px 0 0; color:#fff; font-size:1.1rem; text-shadow:0 1px 0 var(--sea-deep)}
+.plist{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:12px}
+.pcard{display:flex; gap:8px; align-items:stretch; background:var(--paper-2); border-radius:16px; padding:8px; border:2px solid var(--line)}
+.pbtn{flex:1; min-width:0; border:0; background:transparent; display:flex; align-items:center; gap:12px; padding:6px; cursor:pointer; text-align:left; border-radius:12px}
+.pbtn:hover{background:#fff}
+.avatar{width:52px; height:52px; border-radius:50%; display:grid; place-items:center; color:#fff; font-weight:800; font-size:1.5rem; flex:none; font-family:var(--font-display)}
+.pname{font-weight:800; font-size:1.2rem; overflow-wrap:anywhere}
+.pdel{border:0; background:transparent; color:var(--ink-soft); font-size:.9rem; cursor:pointer; padding:6px 8px; border-radius:10px; text-decoration:underline}
+label.lbl{font-weight:800; display:block; margin-bottom:6px}
+.inp{width:100%; font-size:1.4rem; padding:12px 14px; border-radius:14px; border:3px solid var(--line); background:#fff; font-family:inherit; color:var(--ink)}
+.ages{display:grid; grid-template-columns:repeat(auto-fill, minmax(64px,1fr)); gap:8px}
+.age{min-height:58px; border-radius:14px; border:3px solid var(--line); background:#fff; font-size:1.3rem; font-weight:800; cursor:pointer}
+.age.wide{grid-column:span 2; font-size:1.05rem}
+.age[aria-pressed="true"]{background:var(--sea-deep); border-color:var(--sea-deep); color:#fff}
+.err{color:var(--berry); font-weight:700; min-height:1.4em; margin:6px 0 0}
+
+/* Cabecera del mapa */
+.topbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:var(--paper); border-radius:var(--r); padding:10px 12px; box-shadow:0 4px 0 rgba(10,60,90,.18)}
+.who{display:flex; align-items:center; gap:10px; min-width:0}
+.who .avatar{width:44px; height:44px; font-size:1.25rem}
+.who b{font-size:1.2rem; overflow-wrap:anywhere}
+.pill{display:inline-flex; align-items:center; gap:6px; background:var(--paper-2); border:2px solid var(--line); padding:6px 12px; border-radius:999px; font-weight:800; font-variant-numeric:tabular-nums}
+.pill svg{width:22px; height:22px}
+
+/* Kiko y bocadillo */
+.talk{display:flex; gap:10px; align-items:flex-end}
+.talk .kiko{width:78px; height:78px; flex:none}
+.bubble{position:relative; background:#fff; border-radius:18px; padding:12px 16px; font-size:1.1rem; font-weight:600; box-shadow:0 3px 0 rgba(10,60,90,.15); min-width:0}
+.bubble::before{content:""; position:absolute; left:-10px; bottom:18px; border:10px solid transparent; border-right-color:#fff; border-left:0}
+.kiko .eye{animation:blink 5s infinite; transform-origin:61px 38px}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.kiko.happy{animation:hop .8s ease 2}
+@keyframes hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-12px)}}
+
+/* Mapa */
+.mapwrap{background:var(--paper); border-radius:var(--r); padding:8px; box-shadow:0 4px 0 rgba(10,60,90,.18)}
+.map{width:100%; height:auto; display:block; border-radius:14px}
+.map .zone-hit{cursor:pointer}
+.map .zone-hit:hover + .zl rect, .map .zone-hit:focus + .zl rect{stroke:var(--sun); stroke-width:4}
+.map .zl{pointer-events:none}
+.zones{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px}
+.zbtn{border:0; border-radius:var(--r); padding:14px; text-align:left; cursor:pointer; background:var(--paper); box-shadow:0 4px 0 rgba(10,60,90,.18); display:flex; gap:12px; align-items:center; min-height:96px}
+.zbtn:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(10,60,90,.18)}
+.zsign{width:58px; height:58px; border-radius:16px; display:grid; place-items:center; color:#fff; font-size:2.2rem; font-weight:900; flex:none; font-family:var(--font-display)}
+.zinfo{min-width:0; display:flex; flex-direction:column; gap:2px}
+.zinfo b{font-size:1.15rem}
+.zmeta{font-size:.92rem; color:var(--ink-soft)}
+.chstars{display:inline-flex; gap:2px}
+.chstars svg{width:18px; height:18px}
+.tag{display:inline-block; background:var(--helpbg); border:2px solid var(--helpline); border-radius:999px; padding:1px 8px; font-size:.82rem; font-weight:800; width:max-content}
+.complete-banner{background:linear-gradient(90deg,#fff3c8,#ffe1ea,#dff1ff); border-radius:var(--r); padding:14px 16px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; font-weight:700}
+
+/* Misión */
+.mtop{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.mtop h2{font-size:1.25rem; color:#fff; text-shadow:0 2px 0 var(--sea-deep); flex:1; min-width:0; overflow-wrap:anywhere}
+.story h3{font-size:1.25rem}
+.story{border-radius:var(--r); padding:14px 16px; color:#fff; display:flex; flex-direction:column; gap:10px}
+.story p{margin:0; font-size:1.05rem}
+.scene{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.slot{width:46px; height:46px; border-radius:12px; background:rgba(255,255,255,.25); display:grid; place-items:center}
+.slot svg{width:36px; height:36px}
+.slot.off svg{opacity:.28; filter:grayscale(1)}
+.slot.extra{outline:3px dashed rgba(255,255,255,.7)}
+.progress-label{font-weight:800; font-size:.95rem}
+.mgrid{display:grid; grid-template-columns:1fr; gap:14px}
+@media (min-width:820px){ .mgrid{grid-template-columns:minmax(0,1fr) 340px; align-items:start} .padcol{position:sticky; top:12px} }
+.problem{display:flex; flex-direction:column; gap:12px}
+.ptext{font-size:1.15rem; margin:0}
+.expr{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px; font-family:var(--font-display); font-size:clamp(2.2rem, 9vw, 3.4rem); font-weight:800; font-variant-numeric:tabular-nums}
+.answer{min-width:2.6em; padding:0 .25em; min-height:1.35em; border-radius:16px; border:4px solid var(--sea-deep); background:#fff; display:inline-flex; align-items:center; justify-content:center; color:var(--sea-deep)}
+.answer.empty::after{content:"?"; color:#9bb4c4}
+.answer.ok{border-color:var(--ok); color:var(--ok); background:var(--okbg)}
+.answer.caret::after{content:""; width:3px; height:.9em; background:var(--sea-deep); margin-left:3px; animation:caret 1s steps(1) infinite}
+.answer.empty.caret::after{content:"?"; width:auto; height:auto; background:none; animation:none}
+@keyframes caret{50%{opacity:0}}
+.pad{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+.key{min-height:64px; border-radius:16px; border:0; background:#fff; font-size:1.9rem; font-weight:800; box-shadow:0 4px 0 #b9cbd6; cursor:pointer; font-variant-numeric:tabular-nums}
+.key:active{transform:translateY(3px); box-shadow:0 1px 0 #b9cbd6}
+.key.del{font-size:1.1rem; background:#ffe9e4; box-shadow:0 4px 0 #f1b6a8}
+.key.zero{grid-column:span 2}
+.key[disabled]{opacity:.45}
+.checkbtn{grid-column:1 / -1; min-height:68px; font-size:1.4rem}
+.toolrow{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.fb{border-radius:var(--r); padding:14px 16px; display:flex; flex-direction:column; gap:12px; font-size:1.08rem}
+.fb.good{background:var(--okbg); border:3px solid #9bd58d}
+.fb.help{background:var(--helpbg); border:3px solid var(--helpline)}
+.fb.note{background:#eaf8fc; border:3px solid #9fd9ea}
+.fb p{margin:0}
+.fb .lead{font-weight:800; font-size:1.18rem}
+.fb .kline{display:flex; gap:10px; align-items:flex-start}
+.fb .kline .kiko{width:58px; height:58px; flex:none}
+.fb .kline > div{min-width:0; display:flex; flex-direction:column; gap:6px}
+.starsrow{display:flex; gap:4px}
+.starsrow svg{width:34px; height:34px}
+.levelup{background:#fff; border-radius:12px; padding:8px 12px; font-weight:800; color:var(--plum); border:2px dashed var(--plum)}
+
+/* Representaciones visuales */
+.vis{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center; background:#fff; border-radius:14px; padding:12px; border:2px solid var(--line)}
+.vis .op{font-size:2rem; font-weight:900; color:var(--ink-soft); font-family:var(--font-display)}
+.grp{margin:0; display:flex; flex-direction:column; align-items:center; gap:6px; max-width:100%}
+.grp figcaption{font-weight:800; font-size:1.05rem; text-align:center; font-variant-numeric:tabular-nums}
+.grp-in{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; max-width:100%}
+.frames{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; max-width:100%}
+.frame{display:grid; grid-template-columns:repeat(5, 18px); grid-auto-rows:18px; gap:3px; padding:4px; border:2px solid #c9d6de; border-radius:8px; background:#f7fbfd}
+.frame i{display:block; border-radius:50%}
+.frames.sm .frame{grid-template-columns:repeat(5, 12px); grid-auto-rows:12px; gap:2px; padding:3px}
+.dot.ca{background:var(--ca)} .dot.cb{background:var(--cb)} .dot.cc{background:var(--cc)}
+.cell{background:transparent}
+.dot.gone{background:#fff !important; border:2px solid #b8c4cc; position:relative}
+.dot.gone::after{content:""; position:absolute; inset:-3px; background:linear-gradient(45deg, transparent 44%, var(--berry) 44%, var(--berry) 56%, transparent 56%)}
+.blocks{display:flex; flex-wrap:wrap; align-items:flex-end; gap:4px; justify-content:center; max-width:100%}
+.b100{width:46px; height:46px; display:block; border-radius:3px; background-color:currentColor;
+  background-image:linear-gradient(rgba(255,255,255,.55) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.55) 1px, transparent 1px); background-size:4.6px 4.6px}
+.b10{width:8px; height:46px; display:block; border-radius:2px; background-color:currentColor;
+  background-image:linear-gradient(rgba(255,255,255,.7) 1px, transparent 1px); background-size:8px 4.6px}
+.units{display:grid; grid-template-rows:repeat(5, 8px); grid-auto-flow:column; grid-auto-columns:8px; gap:1.5px; align-self:flex-end}
+.b1{width:8px; height:8px; display:block; border-radius:1.5px; background:currentColor}
+.blocks.ca{color:var(--ca)} .blocks.cb{color:var(--cb)} .blocks.cc{color:var(--cc)} .blocks.ci{color:var(--ink-soft)}
+.blocks i.gone{opacity:.25; outline:2px solid var(--berry); outline-offset:-1px}
+.legend{display:flex; flex-wrap:wrap; gap:14px; justify-content:center; font-size:.9rem; color:var(--ink-soft); width:100%}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend .b100{width:22px; height:22px; background-size:2.2px 2.2px; color:var(--ink-soft)}
+.legend .b10{height:22px; width:5px; background-size:5px 2.2px; color:var(--ink-soft)}
+.legend .b1{color:var(--ink-soft)}
+.baskets{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; max-width:100%}
+.basket{display:flex; flex-direction:column; align-items:center; gap:4px}
+.basket-in{min-width:64px; min-height:54px; padding:8px 8px 10px; border:4px solid #b07a3a; border-top-width:3px; border-radius:6px 6px 22px 22px; background:repeating-linear-gradient(45deg,#f7e2bf 0 6px,#f1d5a6 6px 12px); display:flex; flex-wrap:wrap; gap:4px; justify-content:center; align-items:center}
+.basket-in .frames .frame{background:rgba(255,255,255,.75)}
+.basket-label{font-weight:800; font-size:.95rem; font-variant-numeric:tabular-nums}
+.baskets.mini .basket-in{min-width:40px; min-height:40px; padding:5px}
+.pile{border:3px dashed #9fb3c0; border-radius:14px; padding:8px; background:#f7fbfd}
+.arrow{font-size:1.8rem; color:var(--ink-soft); font-weight:900}
+.colboard{display:inline-grid; gap:2px 4px; font-family:var(--font-display); font-size:1.7rem; font-weight:800; font-variant-numeric:tabular-nums; background:#fff; padding:10px 14px; border-radius:12px; border:2px solid var(--line); justify-items:center}
+.cb{min-width:1.1em; text-align:center}
+.cb.small{font-size:1rem; color:var(--berry); min-height:1.1em}
+.cb.act{background:#fff1b8; border-radius:6px}
+.cb.cross{text-decoration:line-through; text-decoration-color:var(--berry); text-decoration-thickness:3px; color:var(--ink-soft)}
+.cb.rule{border-top:3px solid var(--ink); width:100%; min-height:0}
+.cb.res{color:var(--leaf)}
+.eqline{font-weight:800; font-size:1.2rem; text-align:center; width:100%}
+
+/* Modal */
+.overlay{position:fixed; inset:0; background:rgba(16,45,70,.55); display:flex; align-items:flex-start; justify-content:center; padding:max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); z-index:50; overflow-y:auto}
+.modal{background:var(--paper); border-radius:22px; width:100%; max-width:760px; padding:16px; display:flex; flex-direction:column; gap:14px; margin-block:auto}
+.modal h3{font-size:1.3rem}
+.steptext{font-size:1.2rem; font-weight:600; margin:0}
+.stepdots{display:flex; gap:6px}
+.stepdots i{width:12px; height:12px; border-radius:50%; background:var(--line)}
+.stepdots i.on{background:var(--plum)}
+
+/* Medallas y final */
+.medals{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:12px}
+.medal{background:var(--paper-2); border-radius:16px; padding:12px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px; border:2px solid var(--line)}
+.medal svg{width:64px; height:74px}
+.medal.locked svg{filter:grayscale(1); opacity:.35}
+.medal b{font-size:1rem}
+.medal span{font-size:.88rem; color:var(--ink-soft)}
+.levels{display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:10px}
+.lvl{display:flex; gap:10px; align-items:center; background:var(--paper-2); border-radius:14px; padding:10px}
+.lvl .zsign{width:44px; height:44px; font-size:1.6rem; border-radius:12px}
+.meter{height:10px; background:#e8e1cc; border-radius:99px; overflow:hidden; width:100%}
+.meter i{display:block; height:100%; background:var(--leaf); border-radius:99px}
+.win{display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px}
+.win .kiko{width:130px; height:130px}
+.win h2{font-size:clamp(1.6rem, 6vw, 2.3rem)}
+.reward{display:flex; gap:12px; align-items:center; background:var(--paper-2); border-radius:16px; padding:12px 14px; text-align:left; width:100%; border:2px solid var(--line)}
+.reward svg{width:56px; height:56px; flex:none}
+.confetti{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:60}
+.confetti i{position:absolute; top:-20px; width:10px; height:14px; border-radius:2px; animation:fall 2.4s linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+@media (max-width:520px){
+  body{font-size:17px}
+  .zones{grid-template-columns:1fr}
+  .key{min-height:58px}
+  .hero .kiko{width:80px; height:80px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important; transition:none !important}
+  .confetti{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <div id="storageWarn" class="banner" hidden role="status">
+    <b>Este navegador no deja guardar el progreso.</b> Puedes jugar igualmente, pero al cerrar la página se perderán las estrellas y medallas.
+  </div>
+
+  <!-- PERFILES -->
+  <section class="screen" id="s-profiles" hidden>
+    <div class="hero">
+      <svg class="kiko" viewBox="0 0 100 100" aria-hidden="true"><use href="#kikoArt"/></svg>
+      <div>
+        <h1>La isla de los números</h1>
+        <p>Una aventura para aprender sumas, restas, multiplicaciones y repartos.</p>
+      </div>
+    </div>
+    <div class="card" id="profileListCard" hidden>
+      <h2 style="font-size:1.4rem; margin-bottom:12px">¿Quién va a jugar?</h2>
+      <div class="plist" id="plist"></div>
+    </div>
+    <form class="card" id="newProfile" novalidate>
+      <h2 id="newTitle" style="font-size:1.4rem; margin-bottom:12px">Nuevo explorador</h2>
+      <div style="display:flex; flex-direction:column; gap:14px">
+        <div>
+          <label class="lbl" for="pname">¿Cómo te llamas?</label>
+          <input class="inp" id="pname" name="pname" maxlength="16" autocomplete="off" placeholder="Escribe tu nombre">
+        </div>
+        <div>
+          <span class="lbl" id="ageLbl">¿Cuántos años tienes?</span>
+          <div class="ages" role="group" aria-labelledby="ageLbl" id="ages"></div>
+        </div>
+        <p class="err" id="perr" role="alert"></p>
+        <div class="row">
+          <button class="btn go" type="submit" id="createBtn">¡A la aventura!</button>
+          <button class="btn ghost" type="button" id="cancelNew" hidden>Volver</button>
+        </div>
+      </div>
+    </form>
+    <p class="banner info" id="saveNote">Tu progreso se guarda solo en este dispositivo y en este navegador. No hace falta correo ni registro.</p>
+  </section>
+
+  <!-- MAPA -->
+  <section class="screen" id="s-map" hidden>
+    <div class="topbar">
+      <div class="who"><span class="avatar" id="mAvatar"></span><b id="mName"></b></div>
+      <span class="pill" title="Estrellas"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#starArt"/></svg><span id="mStars">0</span></span>
+      <span class="spacer"></span>
+      <button class="btn ghost sm" id="toMedals">Medallas</button>
+      <button class="btn ghost sm" id="toProfiles">Cambiar perfil</button>
+    </div>
+    <div class="talk">
+      <svg class="kiko" viewBox="0 0 100 100" aria-hidden="true"><use href="#kikoArt"/></svg>
+      <div class="bubble" id="mapSay"></div>
+    </div>
+    <div id="islandDone" class="complete-banner" hidden>
+      <span style="flex:1; min-width:200px">¡La isla está completa! Puedes repetir cualquier zona: siempre habrá ejercicios nuevos.</span>
+      <button class="btn go sm" id="surprise">Misión sorpresa</button>
+    </div>
+    <div class="mapwrap"><svg class="map" id="mapSvg" viewBox="0 0 400 300" role="img" aria-label="Mapa de la isla con cuatro zonas"></svg></div>
+    <div class="zones" id="zones"></div>
+  </section>
+
+  <!-- MISIÓN -->
+  <section class="screen" id="s-mission" hidden>
+    <div class="mtop">
+      <button class="btn ghost sm" id="backMap">← Mapa</button>
+      <h2 id="mTitle"></h2>
+      <button class="btn help sm" id="helpBtn">Ayuda</button>
+    </div>
+    <div class="story" id="story">
+      <h3 id="storyTitle"></h3>
+      <p id="storyText"></p>
+      <div class="row"><span class="progress-label" id="progLabel"></span></div>
+      <div class="scene" id="scene" aria-hidden="true"></div>
+    </div>
+    <div class="mgrid">
+      <div style="display:flex; flex-direction:column; gap:14px; min-width:0">
+        <div class="card problem">
+          <p class="ptext" id="ptext"></p>
+          <div class="expr" aria-live="polite"><span id="exprText"></span><span>=</span><span class="answer empty caret" id="answer" aria-label="Tu respuesta"></span></div>
+        </div>
+        <div id="feedback" aria-live="polite"></div>
+      </div>
+      <div class="padcol card" style="padding:14px">
+        <div class="pad" id="pad">
+          <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+          <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+          <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+          <button class="key del" data-k="del" aria-label="Borrar">⌫ Borrar</button><button class="key zero" data-k="0">0</button>
+          <button class="btn go checkbtn" id="checkBtn">Comprobar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MISIÓN COMPLETADA -->
+  <section class="screen" id="s-win" hidden>
+    <div class="card win">
+      <svg class="kiko happy" viewBox="0 0 100 100" aria-hidden="true"><use href="#kikoArt"/></svg>
+      <h2 id="winTitle"></h2>
+      <p id="winText" style="margin:0; font-size:1.15rem"></p>
+      <div class="starsrow" id="winStars" aria-hidden="true"></div>
+      <div id="winRewards" style="display:flex; flex-direction:column; gap:10px; width:100%"></div>
+      <div class="row" style="justify-content:center">
+        <button class="btn go" id="again">Otra misión aquí</button>
+        <button class="btn ghost" id="winMap">Volver al mapa</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEDALLAS -->
+  <section class="screen" id="s-medals" hidden>
+    <div class="mtop">
+      <button class="btn ghost sm" id="medalsBack">← Mapa</button>
+      <h2 id="medTitle"></h2>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:10px">Tus niveles</h3>
+      <div class="levels" id="levels"></div>
+      <p class="small muted" style="margin:10px 0 0">El nivel de cada zona sube poco a poco cuando aciertas a la primera varias veces seguidas.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:10px">Medallas</h3>
+      <div class="medals" id="medalGrid"></div>
+    </div>
+  </section>
+</div>
+
+<div class="overlay" id="guide" hidden role="dialog" aria-modal="true" aria-labelledby="gTitle">
+  <div class="modal">
+    <div style="display:flex; gap:10px; align-items:center"><h3 id="gTitle" style="flex:1; min-width:0">Vamos paso a paso</h3><button class="btn ghost sm" id="gClose">Cerrar</button></div>
+    <div class="stepdots" id="gDots"></div>
+    <p class="steptext" id="gText"></p>
+    <div id="gVis"></div>
+    <div class="row">
+      <button class="btn ghost" id="gPrev">← Anterior</button>
+      <span class="spacer"></span>
+      <button class="btn step" id="gNext">Siguiente paso →</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="confirm" hidden role="dialog" aria-modal="true" aria-labelledby="cText">
+  <div class="modal" style="max-width:440px">
+    <p class="steptext" id="cText"></p>
+    <div class="row"><button class="btn danger" id="cYes">Sí, borrar</button><button class="btn ghost" id="cNo">No, mejor no</button></div>
+  </div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="kikoArt">
+      <path d="M43 88 l-4 8 M55 89 l2 8" stroke="#ff9f1c" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M50 90 C30 91 21 75 23 57 C25 37 36 21 53 20 C71 19 81 35 79 56 C77 76 68 90 50 90Z" fill="#2fb36a"/>
+      <path d="M22 70 C12 80 14 92 24 96 C24 86 28 80 30 76Z" fill="#2f6fd0"/>
+      <ellipse cx="53" cy="66" rx="15" ry="19" fill="#ffd45c"/>
+      <path d="M30 52 C20 64 25 81 38 85 C34 73 37 62 30 52Z" fill="#1f8a50"/>
+      <path d="M47 22 C42 9 51 2 58 7 C54 11 56 15 61 20Z" fill="#e8553f"/>
+      <circle cx="60" cy="38" r="9.5" fill="#fff"/>
+      <g class="eye"><circle cx="62" cy="39" r="4.8" fill="#1d2f44"/><circle cx="63.5" cy="37.5" r="1.4" fill="#fff"/></g>
+      <path d="M69 41 C84 40 87 54 77 59 C75 52 72 48 66 47Z" fill="#ff9f1c"/>
+      <circle cx="55" cy="51" r="4" fill="#ff8fa3" opacity=".75"/>
+    </g>
+    <path id="starArt" d="M12 2.2l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17l-5.9 3.3 1.3-6.6L2.5 9.1l6.6-.8z" fill="#ffc23d" stroke="#d99a12" stroke-width="1.2" stroke-linejoin="round"/>
+  </defs>
+</svg>
+
+<script>
+'use strict';
+/* =========================================================
+   Utilidades
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const N = (n, s, p) => n + ' ' + (n === 1 ? s : (p || s + 's'));
+const digits = n => String(n).split('').reverse().map(Number); // [unidades, decenas, centenas]
+const split = n => ({h: Math.floor(n / 100), t: Math.floor(n / 10) % 10, u: n % 10});
+const PL = ['unidades', 'decenas', 'centenas'];
+const SG = ['unidad', 'decena', 'centena'];
+const OPS = ['add', 'sub', 'mul', 'div'];
+const SIGN = {add: '+', sub: '−', mul: '×', div: '÷'};
+const OPCOLOR = {add: 'var(--add)', sub: 'var(--sub)', mul: 'var(--mul)', div: 'var(--div)'};
+const MAXLEVEL = 10;
+const MISSION_LEN = 5;
+// Nivel inicial por edad: [sumas, restas, multiplicaciones, repartos]
+const START = {5:[1,1,1,1], 6:[2,2,1,1], 7:[3,3,2,2], 8:[4,4,2,2], 9:[5,5,3,3], 10:[6,6,4,4], 11:[7,7,5,5], 12:[8,8,6,6]};
+const AVATAR_COLORS = ['#e8553f', '#7a4cc4', '#11729f', '#2f8f45', '#d23f6c', '#c7771a'];
+
+function carries(a, b) {
+  const da = digits(a), db = digits(b); let c = 0, n = 0;
+  for (let i = 0; i < Math.max(da.length, db.length); i++) { const s = (da[i] || 0) + (db[i] || 0) + c; c = s >= 10 ? 1 : 0; n += c; }
+  return n;
+}
+function borrows(a, b) {
+  const da = digits(a), db = digits(b); let br = 0, n = 0;
+  for (let i = 0; i < da.length; i++) { const d = da[i] - br - (db[i] || 0); br = d < 0 ? 1 : 0; n += br; }
+  return n;
+}
+
+/* =========================================================
+   Guardado local
+   ========================================================= */
+const KEY = 'islaNumeros.v1';
+let storageOK = true;
+const Store = {
+  data: {profiles: {}, order: [], lastId: null},
+  init() {
+    try {
+      const t = '__isla_prueba__';
+      localStorage.setItem(t, '1'); localStorage.removeItem(t);
+    } catch (e) { storageOK = false; return; }
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && d.profiles && typeof d.profiles === 'object') {
+          this.data = {profiles: d.profiles, order: Array.isArray(d.order) ? d.order.filter(id => d.profiles[id]) : Object.keys(d.profiles), lastId: d.lastId || null};
+        }
+      }
+    } catch (e) { /* datos dañados: empezamos de cero sin bloquear el juego */ }
+  },
+  save() {
+    if (!storageOK) return;
+    try { localStorage.setItem(KEY, JSON.stringify(this.data)); }
+    catch (e) { storageOK = false; showStorageWarning(); }
+  }
+};
+function showStorageWarning() { $('#storageWarn').hidden = storageOK; $('#saveNote').hidden = !storageOK; }
+
+/* =========================================================
+   Perfiles
+   ========================================================= */
+let prof = null; // perfil activo
+function newProfile(name, age) {
+  const lv = START[Math.min(12, age)];
+  const per = v => Object.fromEntries(OPS.map(k => [k, typeof v === 'function' ? v(k) : v]));
+  return {
+    id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    name, age, created: Date.now(), color: AVATAR_COLORS[Store.data.order.length % AVATAR_COLORS.length],
+    skills: per(k => ({level: lv[OPS.indexOf(k)], indep: 0, struggle: 0, solved: 0, firstTry: 0})),
+    chapters: per(0), missions: per(0), zoneStars: per(0), recent: per(() => []), current: {},
+    stars: 0, medals: [], rewarded: [], helpWins: 0, guidedDone: 0, totalMissions: 0
+  };
+}
+function fixProfile(p) { // tolera perfiles guardados con campos ausentes
+  const per = v => Object.fromEntries(OPS.map(k => [k, typeof v === 'function' ? v(k) : v]));
+  if (!(p.age >= 5 && p.age <= 13)) p.age = 8;
+  const base = newProfile(p.name || 'Explorador', p.age);
+  for (const k of Object.keys(base)) if (p[k] === undefined) p[k] = base[k];
+  for (const o of OPS) {
+    if (!p.skills[o]) p.skills[o] = base.skills[o];
+    for (const f of ['chapters', 'missions', 'zoneStars']) if (typeof p[f][o] !== 'number') p[f][o] = 0;
+    if (!Array.isArray(p.recent[o])) p.recent[o] = [];
+  }
+  if (!p.current || typeof p.current !== 'object') p.current = {};
+  return p;
+}
+function selectProfile(id) {
+  const p = Store.data.profiles[id]; if (!p) return;
+  prof = fixProfile(p); Store.data.lastId = id; Store.save();
+  showMap();
+}
+
+/* =========================================================
+   Generación de ejercicios por operación y nivel (1-10)
+   ========================================================= */
+function P(op, a, b, ans, level, feat) { return {op, a, b, ans, level, feat: feat || '', key: op + ':' + a + ':' + b}; }
+const GEN = {
+  add(L) {
+    let a, b;
+    switch (L) {
+      case 1: a = ri(1, 5); b = ri(1, 5); break;                                             // hasta 10
+      case 2: do { a = ri(2, 10); b = ri(2, 10); } while (a + b < 11 || a + b > 20); break;   // pasar la decena hasta 20
+      case 3: do { a = ri(11, 88); b = ri(1, 9); } while (a % 10 + b >= 10); break;           // 2 cifras + 1 cifra sin llevar
+      case 4: do { a = ri(10, 80); b = ri(10, 80); } while (a % 10 + b % 10 >= 10 || a + b >= 100); break; // 2 + 2 sin llevar
+      case 5: do { a = ri(11, 89); b = ri(2, 9); } while (a % 10 + b < 10 || a + b >= 100); break;          // 2 + 1 llevando
+      case 6: do { a = ri(12, 79); b = ri(12, 79); } while (a % 10 + b % 10 < 10 || a + b >= 100); break;  // 2 + 2 llevando
+      case 7: do { a = ri(25, 99); b = ri(25, 99); } while (a + b < 100); break;                            // pasar de 100
+      case 8: do { a = ri(100, 899); b = ri(10, 99); } while (a + b >= 1000); break;
+      case 9: do { a = ri(100, 799); b = ri(100, 799); } while (a + b >= 1000 || carries(a, b) > 1); break;
+      default: do { a = ri(100, 799); b = ri(100, 799); } while (a + b >= 1000 || carries(a, b) < 1); break;
+    }
+    return P('add', a, b, a + b, L, L <= 2 ? 's' : (carries(a, b) > 0 ? 'c' : 'n'));
+  },
+  sub(L) {
+    let a, b;
+    switch (L) {
+      case 1: a = ri(2, 10); b = ri(1, a - 1); break;
+      case 2: do { a = ri(11, 19); b = ri(1, 9); } while (b > a % 10); break;
+      case 3: do { a = ri(11, 18); b = ri(2, 9); } while (b <= a % 10); break;
+      case 4: do { a = ri(25, 99); b = Math.random() < 0.35 ? ri(1, 9) : ri(10, a - 1); } while (a % 10 < b % 10 || Math.floor(a / 10) < Math.floor(b / 10) || a - b < 1); break;
+      case 5: do { a = ri(21, 98); b = ri(2, 9); } while (a % 10 >= b); break;
+      case 6: do { a = ri(31, 98); b = ri(12, 89); } while (a % 10 >= b % 10 || a - b < 2); break;
+      case 7: do { a = ri(101, 199); b = ri(12, 99); } while (a - b < 5); break;
+      case 8: a = ri(200, 999); b = ri(11, 99); break;
+      case 9: do { a = ri(300, 999); b = ri(100, a - 1); } while (borrows(a, b) > 0 || a - b < 10); break;
+      default: do { a = ri(300, 999); b = ri(101, a - 1); } while (borrows(a, b) < 1 || a - b < 10); break;
+    }
+    return P('sub', a, b, a - b, L, borrows(a, b) > 0 ? 'c' : 'n');
+  },
+  mul(L) { // a grupos de b
+    let a, b;
+    switch (L) {
+      case 1: a = ri(1, 5); b = ri(2, 3); break;
+      case 2: a = ri(2, 10); b = pick([2, 5, 10]); break;
+      case 3: a = ri(2, 10); b = pick([2, 3, 4, 5, 10]); break;
+      case 4: a = ri(2, 10); b = pick([3, 4, 6, 2, 5]); break;
+      case 5: a = ri(2, 10); b = ri(2, 9); break;
+      case 6: a = ri(3, 9); b = ri(6, 9); break;
+      case 7: a = ri(2, 5); b = ri(11, 25); break;
+      case 8: a = ri(2, 9); b = ri(12, 49); break;
+      case 9: a = ri(3, 9); b = ri(25, 99); break;
+      default: a = ri(11, 19); b = ri(11, 25); break;
+    }
+    return P('mul', a, b, a * b, L, b > 10 ? 'g' + (a > 10 ? 'big' : 'mid') : 't' + b);
+  },
+  div(L) { // a ÷ b = q, siempre exacta y b distinto de 0
+    let b, q;
+    switch (L) {
+      case 1: b = 2; q = ri(1, 5); break;
+      case 2: b = pick([2, 3, 5]); q = ri(1, 5); break;
+      case 3: b = ri(2, 5); q = ri(2, 10); break;
+      case 4: b = pick([2, 3, 4, 5, 6, 10]); q = ri(2, 10); break;
+      case 5: b = ri(2, 9); q = ri(2, 10); break;
+      case 6: b = ri(6, 9); q = ri(4, 10); break;
+      case 7: b = ri(2, 5); q = ri(11, 20); break;
+      case 8: b = ri(2, 9); q = ri(11, 30); break;
+      case 9: b = ri(3, 9); q = ri(20, 60); break;
+      default: b = ri(4, 9); q = ri(40, 110); break;
+    }
+    return P('div', b * q, b, q, L, 'd' + b);
+  }
+};
+// Crea un ejercicio que no repite los recientes; con "like" busca uno parecido con números distintos.
+function makeProblem(op, level, avoid, like) {
+  let p;
+  for (let i = 0; i < 80; i++) {
+    p = GEN[op](level);
+    if (avoid.includes(p.key)) continue;
+    if (like) {
+      if (p.key === like.key) continue;
+      if (i < 60 && p.feat !== like.feat) continue;
+    }
+    break;
+  }
+  return p;
+}
+
+/* =========================================================
+   Representaciones visuales (HTML + CSS, cantidades exactas)
+   ========================================================= */
+// segs: [{n, cls, gone}] -> puntos en cajas de 10
+function dots(segs, small) {
+  const list = [];
+  for (const s of segs) for (let i = 0; i < s.n; i++) list.push(s.cls + (s.gone && i >= s.n - s.gone ? ' gone' : ''));
+  const total = list.length;
+  let out = `<div class="frames${small || total > 40 ? ' sm' : ''}">`;
+  for (let f = 0; f * 10 < total; f++) {
+    out += '<div class="frame">';
+    for (let i = 0; i < 10; i++) { const k = f * 10 + i; out += k < total ? `<i class="dot ${list[k]}"></i>` : '<i class="cell"></i>'; }
+    out += '</div>';
+  }
+  return out + '</div>';
+}
+// c: {h,t,u} -> placas, barras y cubitos. gone: {h,t,u} cuántos van tachados (los últimos)
+function blocks(c, cls, gone) {
+  gone = gone || {};
+  const g = (k, i, n) => (gone[k] && i >= n - gone[k]) ? ' gone' : '';
+  let s = `<div class="blocks ${cls || 'ca'}" data-h="${c.h || 0}" data-t="${c.t || 0}" data-u="${c.u || 0}">`;
+  for (let i = 0; i < (c.h || 0); i++) s += `<i class="b100${g('h', i, c.h)}"></i>`;
+  for (let i = 0; i < (c.t || 0); i++) s += `<i class="b10${g('t', i, c.t)}"></i>`;
+  if (c.u) { s += '<span class="units">'; for (let i = 0; i < c.u; i++) s += `<i class="b1${g('u', i, c.u)}"></i>`; s += '</span>'; }
+  return s + '</div>';
+}
+const blocksN = (n, cls, gone) => blocks(split(n), cls, gone);
+function place(p, n, cls, gone) { const c = {h: 0, t: 0, u: 0}; c[['u', 't', 'h'][p]] = n; const g = {}; if (gone) g[['u', 't', 'h'][p]] = gone; return blocks(c, cls, g); }
+const grp = (label, inner, n) => `<figure class="grp"${n !== undefined ? ` data-n="${n}"` : ''}><div class="grp-in">${inner}</div><figcaption>${label}</figcaption></figure>`;
+const opSym = s => `<span class="op">${s}</span>`;
+const arrow = '<span class="arrow" aria-hidden="true">→</span>';
+function legend(withH) {
+  return `<div class="legend"><span><i class="b10"></i> barra = 10</span><span><i class="b1"></i> cubito = 1</span>${withH ? '<span><i class="b100"></i> placa = 100</span>' : ''}</div>`;
+}
+function basket(inner, label, n) { return `<div class="basket"${n !== undefined ? ` data-n="${n}"` : ''}><div class="basket-in">${inner}</div><div class="basket-label">${label}</div></div>`; }
+const vis = inner => `<div class="vis">${inner}</div>`;
+// Cuenta en columnas: top/bottom alineados por cifras
+function colBoard(a, b, sign, o) {
+  o = o || {};
+  const res = o.res || [], small = o.small || {}, cross = o.cross || {};
+  const len = Math.max(String(a).length, String(b).length, res.length);
+  const da = digits(a), db = digits(b);
+  const c = (txt, cls) => `<span class="cb ${cls || ''}">${txt}</span>`;
+  let h = `<div class="colboard" style="grid-template-columns:repeat(${len + 1}, auto)" aria-hidden="true">`;
+  h += c('', 'small');
+  for (let i = len - 1; i >= 0; i--) h += c(small[i] !== undefined ? small[i] : '', 'small' + (i === o.active ? ' act' : ''));
+  h += c('');
+  for (let i = len - 1; i >= 0; i--) h += c(da[i] !== undefined ? da[i] : '', (cross[i] ? 'cross ' : '') + (i === o.active ? 'act' : ''));
+  h += c(sign);
+  for (let i = len - 1; i >= 0; i--) h += c(db[i] !== undefined ? db[i] : '', i === o.active ? 'act' : '');
+  for (let i = 0; i <= len; i++) h += c('', 'rule');
+  h += c('');
+  for (let i = len - 1; i >= 0; i--) h += c(res[i] !== undefined ? res[i] : '', 'res' + (i === o.active ? ' act' : ''));
+  return h + '</div>';
+}
+
+/* ---------- Pista (primer fallo o botón Ayuda): orienta sin dar la solución ---------- */
+function hintFor(p) {
+  const {a, b} = p;
+  if (p.op === 'add') {
+    if (p.ans <= 20) {
+      return {t: `Tienes ${a} y ${b}. Junta los dos grupos y cuenta todos los puntos. Truco: empieza en ${Math.max(a, b)} y sigue contando ${Math.min(a, b)} más.`,
+        v: vis(grp(a, dots([{n: a, cls: 'ca'}]), a) + opSym('+') + grp(b, dots([{n: b, cls: 'cb'}]), b))};
+    }
+    const A = digits(a), B = digits(b), us = A[0] + B[0];
+    let t = `Empieza por las unidades: ${A[0]} + ${B[0]}.`;
+    t += us >= 10 ? ' Salen 10 o más: cambia 10 cubitos por 1 barra y llévala a las decenas.' : ' Después suma las decenas.';
+    return {t, v: vis(grp(a, blocksN(a, 'ca'), a) + opSym('+') + grp(b, blocksN(b, 'cb'), b) + legend(a >= 100 || b >= 100))};
+  }
+  if (p.op === 'sub') {
+    if (a <= 20) {
+      return {t: `Empieza con ${a}. Tacha ${b} y cuenta cuántos quedan sin tachar.`,
+        v: vis(grp(`${a} y tachamos ${b}`, dots([{n: a, cls: 'ca', gone: b}]), a))};
+    }
+    const A = digits(a), B = digits(b);
+    let t = `Empieza por las unidades: ${A[0]} − ${B[0]}.`;
+    t += A[0] < B[0] ? ` Arriba hay menos unidades que abajo: cambia 1 decena por 10 unidades y así tendrás ${A[0] + 10}.` : ' Después resta las decenas.';
+    return {t, v: vis(grp(`Tienes ${a}`, blocksN(a, 'ca'), a) + opSym('−') + grp(`Quitas ${b}`, blocksN(b, 'cb'), b) + legend(a >= 100))};
+  }
+  if (p.op === 'mul') {
+    if (b <= 10) {
+      const seq = [b, 2 * b].slice(0, Math.min(a - 1, 2)); // nunca llega al resultado
+      let t = `${a} × ${b} quiere decir ${N(a, 'cesta')} con ${b} en cada una. ¡Ojo! No es ${a} + ${b}: hay que contar ${a === 1 ? 'el grupo' : 'todos los grupos'}.`;
+      if (a >= 2) t += ` Cuenta de ${b} en ${b}: ${seq.join(', ')}...`;
+      return {t, v: vis(mulBaskets(a, b))};
+    }
+    if (a <= 10) {
+      const bt = Math.floor(b / 10) * 10, bu = b % 10;
+      const t = `${a} × ${b} son ${N(a, 'grupo')} de ${b}. Separa ${b} en ${bt}${bu ? ' y ' + bu : ''}. Calcula ${a} × ${bt}${bu ? ` y ${a} × ${bu}, y luego súmalos` : ''}.`;
+      return {t, v: vis(mulBaskets(a, b) + legend(false))};
+    }
+    const at = Math.floor(a / 10) * 10, au = a % 10;
+    return {t: `${a} × ${b} son ${a} grupos de ${b}. Separa los grupos: ${at} grupos y ${au} grupos. Calcula ${at} × ${b} y ${au} × ${b}, y súmalos.`, v: vis(mulBaskets(a, b, true) + legend(false))};
+  }
+  // div
+  if (p.ans <= 10) {
+    return {t: `Reparte ${a} entre ${b} grupos. Todos los grupos deben recibir la misma cantidad. Pista: ¿qué número multiplicado por ${b} da ${a}?`,
+      v: vis(grp(`${a} para repartir`, `<div class="pile">${dots([{n: a, cls: 'ca'}])}</div>`, a) + arrow + emptyBaskets(b))};
+  }
+  const st = divFirst(a, b);
+  return {t: `Reparte ${a} entre ${b} grupos, y que todos reciban lo mismo. Empieza por las ${PL[st.p]}: reparte ${st.n} ${PL[st.p]} entre ${b}.`,
+    v: vis(grp(`${a} para repartir`, `<div class="pile">${blocksN(a, 'ca')}</div>`, a) + arrow + emptyBaskets(b) + legend(a >= 100))};
+}
+function divFirst(a, b) { // primer trozo del reparto por cifras
+  const d = digits(a); let p = d.length - 1, n = d[p];
+  while (n < b && p > 0) { p--; n = n * 10 + d[p]; }
+  return {p, n};
+}
+function mulBaskets(a, b, mini) {
+  let s = `<div class="baskets${mini ? ' mini' : ''}">`;
+  for (let i = 0; i < a; i++) s += basket(b <= 10 ? dots([{n: b, cls: 'ca'}]) : blocksN(b, 'ca'), b, b);
+  return s + '</div>';
+}
+function emptyBaskets(b) {
+  let s = '<div class="baskets">';
+  for (let i = 0; i < b; i++) s += basket('', '?');
+  return s + '</div>';
+}
+
+/* ---------- Comparar la respuesta con la correcta ---------- */
+function analyze(p, ans) {
+  const {a, b} = p, c = p.ans, d = ans - c, out = [];
+  if (d > 0) out.push(d <= 2 && c >= 3 ? 'Es un poquito más grande que el resultado. Puede que hayas contado alguno de más.' : 'Es más grande que el resultado: te has pasado.');
+  else out.push(-d <= 2 && c >= 3 ? 'Es un poquito más pequeño que el resultado. Puede que te hayas dejado alguno sin contar.' : 'Es más pequeño que el resultado: te has quedado corto.');
+  let pat = null;
+  const A = digits(a), B = digits(b);
+  if (p.op === 'add') {
+    const noCarry = A.reduce((s, x, i) => s + ((x + (B[i] || 0)) % 10) * 10 ** i, 0) + B.slice(A.length).reduce((s, x, i) => s + x * 10 ** (i + A.length), 0);
+    let joined = ''; for (let i = Math.max(A.length, B.length) - 1; i >= 0; i--) joined += String((A[i] || 0) + (B[i] || 0));
+    if (ans === Math.abs(a - b) && a !== b) pat = 'Parece que has restado. Aquí hay que juntar las dos cantidades: es una suma.';
+    else if (carries(a, b) > 0 && ans === noCarry) pat = 'Puede que se te haya olvidado sumar la decena que nos llevamos.';
+    else if (carries(a, b) > 0 && String(ans) === joined) pat = 'Puede que hayas escrito el resultado de cada columna entero. Cuando una columna llega a 10 o más, se cambia por 1 de la columna siguiente.';
+    else if (ans === a || ans === b) pat = 'Ese número ya estaba al principio. Hay que añadirle el otro.';
+  } else if (p.op === 'sub') {
+    const absCols = A.reduce((s, x, i) => s + Math.abs(x - (B[i] || 0)) * 10 ** i, 0);
+    if (ans === a + b) pat = 'Parece que has sumado. Aquí hay que quitar: es una resta.';
+    else if (borrows(a, b) > 0 && ans === absCols) pat = 'Puede que en alguna columna hayas restado el número pequeño del grande. Cuando arriba hay menos, hay que cambiar 1 decena por 10 unidades.';
+    else if (borrows(a, b) > 0 && (d === 10 || d === 100)) pat = 'Quizá cambiaste una decena por 10 unidades, pero se te olvidó quitarla de arriba.';
+    else if (ans === a) pat = 'Ese es el número del principio. Todavía hay que quitarle ' + b + '.';
+  } else if (p.op === 'mul') {
+    if (ans === a + b) pat = `Parece que has sumado ${a} + ${b}. Multiplicar es formar ${a} grupos iguales de ${b}.`;
+    else if (ans === c + b) pat = `Ese número es ${a + 1} × ${b}. Puede que hayas contado un grupo de ${b} de más.`;
+    else if (ans === c - b && a > 1) pat = `Ese número es ${a - 1} × ${b}. Puede que te haya faltado un grupo de ${b}.`;
+    else if (b > 10 && a <= 10) {
+      const bt = Math.floor(b / 10), bu = b % 10;
+      if (String(ans) === String(a * bt) + String(a * bu) && a * bu >= 10) pat = 'Puede que hayas escrito los dos trozos uno detrás de otro. Hay que sumarlos.';
+      else if (ans === a * bt * 10 || ans === a * bu) pat = `Puede que solo hayas multiplicado una parte de ${b}. Hay que multiplicar las decenas y también las unidades.`;
+      else if (ans === a * bt * 10 + (a * bu) % 10 && a * bu >= 10) pat = 'Puede que se te haya olvidado sumar lo que nos llevamos de las unidades.';
+    } else if (a > 10) {
+      const au = a % 10;
+      if (ans === 10 * b || ans === au * b) pat = `Puede que solo hayas calculado una parte de los grupos. Hay que sumar ${10} × ${b} y ${au} × ${b}.`;
+    }
+  } else {
+    if (ans === a - b) pat = 'Parece que has restado. Repartir es dar la misma cantidad a cada grupo.';
+    else if (ans === a * b) pat = 'Parece que has multiplicado. Aquí hay que repartir.';
+    else if (ans === a + b) pat = 'Parece que has sumado. Aquí hay que repartir.';
+    else if (ans === b && c !== b) pat = `${b} es el número de grupos. La pregunta es cuántos le tocan a cada grupo.`;
+    out.push(`Si cada grupo recibiera ${ans}, entre los ${b} grupos serían ${b} × ${ans} = ${b * ans}, y tenemos ${a}.` + (b * ans > a ? ' ¡No llega para tantos!' : ' ¡Todavía sobrarían!'));
+  }
+  if (!pat && c >= 10 && ans >= 10) {
+    const rs = String(c).split('').reverse().join('');
+    if (String(ans) === rs) pat = 'Tienes las cifras correctas, pero en otro orden. Mira qué cifra va en las decenas y cuál en las unidades.';
+    else if (ans % 10 === c % 10) pat = 'Las unidades están bien. Revisa las decenas.';
+    else if (Math.floor(ans / 10) === Math.floor(c / 10)) pat = 'Las decenas están bien. Revisa las unidades.';
+  }
+  if (pat) out.push(pat);
+  return out;
+}
+
+/* ---------- Explicación guiada paso a paso ---------- */
+function stepsFor(p) {
+  const {a, b} = p, c = p.ans, S = [];
+  if (p.op === 'add') {
+    if (c <= 20) {
+      S.push({t: `Tenemos ${a} y ${b}.`, v: vis(grp(a, dots([{n: a, cls: 'ca'}]), a) + opSym('+') + grp(b, dots([{n: b, cls: 'cb'}]), b))});
+      S.push({t: 'Juntamos todos los puntos en cajas de 10.', v: vis(grp(`${a} + ${b}`, dots([{n: a, cls: 'ca'}, {n: b, cls: 'cb'}]), c))});
+      if (c > 10) S.push({t: `Una caja llena son 10. En la otra hay ${c - 10}. 10 y ${c - 10} son ${c}.`, v: vis(grp(`10 + ${c - 10}`, dots([{n: a, cls: 'ca'}, {n: b, cls: 'cb'}]), c))});
+      else S.push({t: `Contamos todos, uno a uno: ¡son ${c}!`, v: vis(grp(c, dots([{n: a, cls: 'ca'}, {n: b, cls: 'cb'}]), c))});
+      S.push({t: `${a} + ${b} = ${c}.`, v: vis(grp(c, dots([{n: c, cls: 'cc'}]), c))});
+      return S;
+    }
+    const A = digits(a), B = digits(b), len = Math.max(A.length, B.length), res = [], small = {};
+    S.push({t: `Vamos a sumar ${a} + ${b}. Cada barra es una decena (10) y cada cubito, una unidad (1).${a >= 100 || b >= 100 ? ' Cada placa es una centena (100).' : ''}`,
+      v: vis(grp(a, blocksN(a, 'ca'), a) + opSym('+') + grp(b, blocksN(b, 'cb'), b) + legend(a >= 100 || b >= 100))});
+    let carry = 0;
+    for (let i = 0; i < len; i++) {
+      const x = A[i] || 0, y = B[i] || 0, s = x + y + carry;
+      let t = `${cap(PL[i])}: ${x} + ${y}${carry ? ' + 1 que nos llevamos' : ''} = ${s}.`;
+      let after;
+      if (s >= 10 && i < len - 1) { t += ` Son 10 o más: 10 ${PL[i]} forman 1 ${SG[i + 1]}. Escribimos ${s - 10} y nos llevamos 1.`; res[i] = s - 10; small[i + 1] = 1; after = grp(`1 ${SG[i + 1]} y ${s - 10}`, place(i + 1, 1, 'cc') + place(i, s - 10, 'cc'), s * 10 ** i); }
+      else if (s >= 10) { t += ` ${s} ${PL[i]} son 1 ${SG[i + 1]} y ${s - 10} ${PL[i]}. Escribimos ${s}.`; res[i] = s - 10; res[i + 1] = 1; after = grp(`1 ${SG[i + 1]} y ${s - 10}`, place(i + 1, 1, 'cc') + place(i, s - 10, 'cc'), s * 10 ** i); }
+      else { t += ` Escribimos ${s}.`; res[i] = s; after = grp(s, place(i, s, 'cc'), s * 10 ** i); }
+      const before = grp(`${x} + ${y}${carry ? ' + 1' : ''}`, place(i, x, 'ca') + place(i, y, 'cb') + (carry ? place(i, 1, 'cc') : ''), s * 10 ** i);
+      S.push({t, v: vis(colBoard(a, b, '+', {res: res.slice(), small: Object.assign({}, small), active: i}) + before + arrow + after)});
+      carry = s >= 10 ? 1 : 0;
+    }
+    S.push({t: `¡Ya está! ${a} + ${b} = ${c}.`, v: vis(colBoard(a, b, '+', {res: digits(c), small}) + grp(c, blocksN(c, 'cc'), c))});
+    return S;
+  }
+  if (p.op === 'sub') {
+    if (a <= 20) {
+      S.push({t: `Tenemos ${a}.`, v: vis(grp(a, dots([{n: a, cls: 'ca'}]), a))});
+      S.push({t: `Quitamos ${b}: los tachamos.`, v: vis(grp(`${a} y tachamos ${b}`, dots([{n: a, cls: 'ca', gone: b}]), a))});
+      S.push({t: `Contamos los que quedan sin tachar: ${c}.`, v: vis(grp(`Quedan ${c}`, dots([{n: a, cls: 'ca', gone: b}]), a))});
+      S.push({t: `${a} − ${b} = ${c}.`, v: vis(grp(c, dots([{n: c, cls: 'cc'}]), c))});
+      return S;
+    }
+    const A = digits(a), B = digits(b), w = A.slice(), res = [], small = {}, cross = {};
+    const cur = () => ({h: w[2] || 0, t: w[1] || 0, u: w[0] || 0});
+    S.push({t: `Tenemos ${a} y hay que quitar ${b}. Empezamos por las unidades.`, v: vis(grp(`Tienes ${a}`, blocksN(a, 'ca'), a) + opSym('−') + grp(`Quitas ${b}`, blocksN(b, 'cb'), b) + legend(a >= 100))});
+    for (let i = 0; i < A.length; i++) {
+      const y = B[i] || 0;
+      if (w[i] < y) {
+        let t;
+        if (w[i + 1] > 0) {
+          t = `En las ${PL[i]} tenemos ${w[i]} y hay que quitar ${y}: no llega. Cambiamos 1 ${SG[i + 1]} por 10 ${PL[i]}. Ahora hay ${w[i] + 10} ${PL[i]}.`;
+          w[i + 1]--; w[i] += 10; small[i + 1] = w[i + 1]; cross[i + 1] = true; small[i] = w[i]; cross[i] = true;
+        } else {
+          t = `En las ${PL[i]} tenemos ${w[i]} y hay que quitar ${y}: no llega. No hay ${PL[i + 1]}, así que primero cambiamos 1 ${SG[i + 2]} por 10 ${PL[i + 1]}, y luego 1 ${SG[i + 1]} por 10 ${PL[i]}. Ahora hay ${w[i] + 10} ${PL[i]}.`;
+          w[i + 2]--; w[i + 1] = 9; w[i] += 10;
+          small[i + 2] = w[i + 2]; cross[i + 2] = true; small[i + 1] = 9; cross[i + 1] = true; small[i] = w[i]; cross[i] = true;
+        }
+        const val = (w[2] || 0) * 100 + (w[1] || 0) * 10 + w[0];
+        S.push({t, v: vis(colBoard(a, b, '−', {res: res.slice(), small: Object.assign({}, small), cross: Object.assign({}, cross), active: i}) + grp(`Sigue siendo ${a}`, blocks(cur(), 'ca'), val))});
+      }
+      res[i] = w[i] - y;
+      S.push({t: `${cap(PL[i])}: ${w[i]} − ${y} = ${w[i] - y}.`, v: vis(colBoard(a, b, '−', {res: res.slice(), small: Object.assign({}, small), cross: Object.assign({}, cross), active: i}) + grp(`${w[i]} y tachamos ${y}`, place(i, w[i], 'ca', y), w[i] * 10 ** i))});
+    }
+    S.push({t: `¡Ya está! ${a} − ${b} = ${c}.`, v: vis(colBoard(a, b, '−', {res: digits(c).concat(Array(Math.max(0, A.length - String(c).length)).fill(undefined)), small, cross}) + grp(c, blocksN(c, 'cc'), c))});
+    return S;
+  }
+  if (p.op === 'mul') {
+    if (b <= 10) {
+      const seq = []; for (let i = 1; i <= a; i++) seq.push(i * b);
+      S.push({t: `${a} × ${b} significa ${N(a, 'grupo')} de ${b}.` + (a > 1 ? ` No es ${a} + ${b} (eso daría ${a + b}).` : ''), v: vis(mulBaskets(a, b))});
+      let s = '<div class="baskets">';
+      for (let i = 0; i < a; i++) s += basket(dots([{n: b, cls: 'ca'}]), `→ ${seq[i]}`, b);
+      s += '</div>';
+      S.push({t: `Contamos de ${b} en ${b}: ${seq.join(', ')}.`, v: vis(s)});
+      S.push({t: `Hay ${c} en total. ${a} × ${b} = ${c}.` + (a > 1 ? ` Es lo mismo que sumar ${Array(a).fill(b).join(' + ')}.` : ''), v: vis(grp(c, dots([{n: c, cls: 'cc'}]), c))});
+      return S;
+    }
+    if (a <= 10) {
+      const bt = Math.floor(b / 10), bu = b % 10;
+      S.push({t: `${a} × ${b} son ${N(a, 'grupo')} de ${b}.`, v: vis(mulBaskets(a, b) + legend(false))});
+      S.push({t: `Separamos ${b} en ${bt} ${bt === 1 ? 'decena' : 'decenas'} (${bt * 10}) y ${N(bu, 'unidad', 'unidades')}.`, v: vis(grp(`${b} = ${bt * 10} + ${bu}`, blocksN(bt * 10, 'ca') + opSym('+') + blocksN(bu, 'cb'), b))});
+      S.push({t: `Decenas: ${a} grupos de ${bt * 10} son ${a} × ${bt * 10} = ${a * bt * 10}.`, v: vis(grp(`${a} × ${bt * 10} = ${a * bt * 10}`, blocksN(a * bt * 10, 'ca'), a * bt * 10) + legend(a * bt * 10 >= 100))});
+      if (bu) S.push({t: `Unidades: ${a} grupos de ${bu} son ${a} × ${bu} = ${a * bu}.`, v: vis(grp(`${a} × ${bu} = ${a * bu}`, blocksN(a * bu, 'cb'), a * bu))});
+      S.push({t: `Sumamos los dos trozos: ${a * bt * 10} + ${a * bu} = ${c}. Así que ${a} × ${b} = ${c}.`, v: vis(grp(c, blocksN(c, 'cc'), c) + legend(c >= 100))});
+      return S;
+    }
+    const at = Math.floor(a / 10) * 10, au = a % 10;
+    S.push({t: `${a} × ${b} son ${a} grupos de ${b}.`, v: vis(mulBaskets(a, b, true) + legend(false))});
+    S.push({t: `Separamos los ${a} grupos en ${at} grupos y ${au} grupos.`, v: vis(grp(`${at} grupos`, mulBaskets(at, b, true), at * b) + opSym('+') + grp(`${au} grupos`, mulBaskets(au, b, true), au * b))});
+    S.push({t: `${at} grupos de ${b}: ${at} × ${b} = ${at * b}. Multiplicar por 10 es poner un 0 detrás.`, v: vis(grp(`${at} × ${b} = ${at * b}`, blocksN(at * b, 'ca'), at * b) + legend(true))});
+    S.push({t: `${au} grupos de ${b}: ${au} × ${b} = ${au * b}.`, v: vis(grp(`${au} × ${b} = ${au * b}`, blocksN(au * b, 'cb'), au * b) + legend(au * b >= 100))});
+    S.push({t: `Sumamos: ${at * b} + ${au * b} = ${c}. Así que ${a} × ${b} = ${c}.`, v: vis(grp(c, blocksN(c, 'cc'), c) + legend(true))});
+    return S;
+  }
+  // Repartos
+  if (c <= 10) {
+    const state = (k, left) => {
+      let s = '<div class="baskets">';
+      for (let i = 0; i < b; i++) s += basket(k ? dots([{n: k, cls: 'cc'}]) : '', k, k);
+      s += '</div>';
+      return grp(`Quedan ${left}`, `<div class="pile">${left ? dots([{n: left, cls: 'ca'}]) : '<span class="muted">0</span>'}</div>`, left) + arrow + s;
+    };
+    S.push({t: `Tenemos ${a} para repartir entre ${b} grupos. Regla de oro: todos los grupos reciben la misma cantidad.`, v: vis(state(0, a))});
+    S.push({t: `Damos 1 a cada grupo. Hemos repartido ${b} y quedan ${a - b}.`, v: vis(state(1, a - b))});
+    if (c >= 3) S.push({t: `Otra vuelta: damos 1 más a cada grupo. Ahora cada uno tiene 2 y quedan ${a - 2 * b}.`, v: vis(state(2, a - 2 * b))});
+    if (c >= 2) S.push({t: `Seguimos dando de uno en uno hasta que no quede ninguno. Cada grupo tiene ${c}. ¡Todos lo mismo!`, v: vis(state(c, 0))});
+    S.push({t: `Comprobamos: ${b} grupos de ${c} son ${b} × ${c} = ${a}. Así que ${a} ÷ ${b} = ${c}.`, v: vis(state(c, 0))});
+    return S;
+  }
+  const d = digits(a), got = {h: 0, t: 0, u: 0}, keys = ['u', 't', 'h'];
+  const view = (pile, pileVal) => {
+    let s = '<div class="baskets">';
+    for (let i = 0; i < b; i++) s += basket(blocks(got, 'cc'), (got.h * 100 + got.t * 10 + got.u) || '?', got.h * 100 + got.t * 10 + got.u);
+    s += '</div>';
+    return grp(`Quedan ${pileVal}`, `<div class="pile">${pileVal ? blocks(pile, 'ca') : '<span class="muted">0</span>'}</div>`, pileVal) + arrow + s;
+  };
+  S.push({t: `Repartimos ${a} entre ${b} grupos. Todos deben recibir lo mismo. Empezamos por la cifra más grande.`, v: vis(view(split(a), a) + legend(a >= 100))});
+  let carry = 0;
+  for (let p2 = d.length - 1; p2 >= 0; p2--) {
+    const n = carry * 10 + d[p2], k = Math.floor(n / b), r = n - k * b;
+    let t;
+    if (k === 0) t = `${cap(PL[p2])}: tenemos ${n}. No llegan para dar 1 a cada uno de los ${b} grupos.`;
+    else t = `${cap(PL[p2])}: tenemos ${n}. Repartimos entre ${b}: cada grupo recibe ${k} ${k === 1 ? SG[p2] : PL[p2]}${r ? ` y sobran ${r}` : ' y no sobra ninguna'}.`;
+    if (r && p2 > 0) t += ` Cambiamos ${r === 1 ? 'esa ' + SG[p2] : 'esas ' + r + ' ' + PL[p2]} por ${r * 10} ${PL[p2 - 1]}.`;
+    got[keys[p2]] += k;
+    const pile = {h: 0, t: 0, u: 0};
+    for (let j = p2 - 1; j >= 0; j--) pile[keys[j]] = d[j];
+    if (p2 > 0) pile[keys[p2 - 1]] += r * 10;
+    const pileVal = pile.h * 100 + pile.t * 10 + pile.u;
+    S.push({t, v: vis(view(pile, pileVal) + legend(a >= 100))});
+    carry = r;
+  }
+  S.push({t: `Cada grupo recibe ${c}. Comprobamos: ${b} × ${c} = ${a}. Así que ${a} ÷ ${b} = ${c}.`, v: vis(view({h: 0, t: 0, u: 0}, 0))});
+  return S;
+}
+
+/* =========================================================
+   Zonas, historias y premios
+   ========================================================= */
+const ZONES = {
+  add: {name: 'Puente del Río', op: 'Sumas', chapters: [
+      {title: 'Reparar el puente', intro: '¡El puente del río se ha roto! Kiko necesita tablas para arreglarlo.', item: '¡El puente ya tiene tablas nuevas! Míralo en el mapa.'},
+      {title: 'Las barandillas', intro: 'Ahora el puente necesita barandillas para cruzar sin miedo.', item: '¡El puente tiene barandillas!'},
+      {title: 'Banderas de fiesta', intro: '¡Vamos a decorar el puente con banderas de colores!', item: '¡Ondean banderas en el puente!'}],
+    free: ['Cuidar el puente', 'Piedras para el río', 'La fiesta del río'],
+    tpl: [(a, b) => `Kiko tiene ${N(a, 'tabla')} y encuentra ${b} más. ¿Cuántas tablas tiene ahora?`,
+      (a, b) => `En una orilla hay ${N(a, 'poste')} y en la otra, ${N(b, 'poste')}. ¿Cuántos postes hay en total?`,
+      (a, b) => `Kiko cuelga ${N(a, 'bandera')} rojas y ${N(b, 'bandera')} azules. ¿Cuántas banderas cuelga?`]},
+  sub: {name: 'Bosque frutal', op: 'Restas', chapters: [
+      {title: 'Recoger manzanas', intro: 'Los manzanos están llenos. ¡Ayuda a Kiko a recoger fruta!', item: '¡Han crecido manzanas en el bosque!'},
+      {title: 'Cocos en la palmera', intro: 'Los cocos se caen de la palmera. ¿Cuántos quedan arriba?', item: '¡La palmera tiene cocos!'},
+      {title: 'Fresas para todos', intro: 'Hay fresas en el bosque, pero algunos pájaros tienen hambre.', item: '¡Han salido fresas en el bosque!'}],
+    free: ['Paseo por el bosque', 'La merienda de fruta', 'El huerto de Kiko'],
+    tpl: [(a, b) => `En el árbol hay ${N(a, 'manzana')}. Kiko recoge ${b}. ¿Cuántas quedan en el árbol?`,
+      (a, b) => `Hay ${N(a, 'coco')} en la palmera y se caen ${b}. ¿Cuántos siguen arriba?`,
+      (a, b) => `La cesta tiene ${N(a, 'fresa')}. Los pájaros se comen ${b}. ¿Cuántas fresas quedan?`]},
+  mul: {name: 'Mercado de cestas', op: 'Multiplicaciones', chapters: [
+      {title: 'Preparar cestas', intro: 'Mañana hay mercado. ¡Hay que llenar las cestas de mangos!', item: '¡Hay cestas nuevas en el mercado!'},
+      {title: 'Bolsas de nueces', intro: 'Las ardillas quieren comprar nueces en bolsas iguales.', item: '¡El mercado tiene más cestas!'},
+      {title: 'Cajas de plátanos', intro: 'Llegan cajas de plátanos en barca. ¡Vamos a contarlos!', item: '¡El mercado está lleno de cestas!'}],
+    free: ['Día de mercado', 'Pedidos para los vecinos', 'Cestas para la fiesta'],
+    tpl: [(a, b) => `Hay ${N(a, 'cesta')} con ${N(b, 'mango')} en cada una. ¿Cuántos mangos hay?`,
+      (a, b) => `Kiko prepara ${N(a, 'bolsa')} con ${N(b, 'nuez', 'nueces')} en cada una. ¿Cuántas nueces son?`,
+      (a, b) => `Llegan ${N(a, 'caja')} con ${N(b, 'plátano')} en cada una. ¿Cuántos plátanos hay?`]},
+  div: {name: 'Refugio de animales', op: 'Repartos', chapters: [
+      {title: 'La comida de los conejos', intro: 'Los conejos del refugio tienen hambre. ¡Reparte bien!', item: '¡Un conejo vive ahora en el refugio!'},
+      {title: 'Las tortugas', intro: 'Las tortugas esperan su lechuga. Todas deben recibir lo mismo.', item: '¡Ha llegado una tortuga al refugio!'},
+      {title: 'Los pajaritos', intro: 'Los pajaritos quieren semillas, y ninguno debe quedarse con menos.', item: '¡Un pajarito canta en el refugio!'}],
+    free: ['Visita al refugio', 'Merienda de animales', 'Nuevos amigos'],
+    tpl: [(a, b) => `Hay ${N(a, 'zanahoria')} para ${N(b, 'conejo')}. Todos reciben lo mismo. ¿Cuántas le tocan a cada conejo?`,
+      (a, b) => `Reparte ${N(a, 'hoja', 'hojas')} de lechuga entre ${N(b, 'tortuga')}, a partes iguales. ¿Cuántas recibe cada una?`,
+      (a, b) => `${N(b, 'pajarito')} se reparten ${N(a, 'semilla')} por igual. ¿Cuántas semillas come cada uno?`]}
+};
+const MEDALS = [
+  {id: 'first', name: 'Primera misión', desc: 'Completa tu primera misión.', sym: '1', col: '#c7771a', test: p => p.totalMissions >= 1},
+  {id: 'z_add', name: 'Medalla del Puente', desc: 'Completa las 3 misiones de sumas.', sym: '+', col: '#e8553f', test: p => p.chapters.add >= 3},
+  {id: 'z_sub', name: 'Medalla del Bosque', desc: 'Completa las 3 misiones de restas.', sym: '−', col: '#2f8f45', test: p => p.chapters.sub >= 3},
+  {id: 'z_mul', name: 'Medalla del Mercado', desc: 'Completa las 3 misiones de multiplicar.', sym: '×', col: '#7a4cc4', test: p => p.chapters.mul >= 3},
+  {id: 'z_div', name: 'Medalla del Refugio', desc: 'Completa las 3 misiones de repartos.', sym: '÷', col: '#11729f', test: p => p.chapters.div >= 3},
+  {id: 'brave', name: 'Medalla de valentía', desc: 'Aprende un ejercicio con la ayuda paso a paso.', sym: '♥', col: '#d23f6c', test: p => p.guidedDone >= 1},
+  {id: 'persist', name: 'Medalla de constancia', desc: 'Acierta 5 ejercicios después de equivocarte.', sym: '5', col: '#2f6fd0', test: p => p.helpWins >= 5},
+  {id: 'stars50', name: 'Cazaestrellas', desc: 'Consigue 50 estrellas.', sym: '★', col: '#e0a100', test: p => p.stars >= 50},
+  {id: 'stars200', name: 'Lluvia de estrellas', desc: 'Consigue 200 estrellas.', sym: '★', col: '#b8860b', test: p => p.stars >= 200},
+  {id: 'island', name: 'Isla completa', desc: 'Completa las cuatro zonas de la isla.', sym: '☀', col: '#e8553f', test: p => OPS.every(o => p.chapters[o] >= 3)},
+  {id: 'endless', name: 'Aventura sin fin', desc: 'Completa 20 misiones.', sym: '20', col: '#11729f', test: p => p.totalMissions >= 20}
+];
+function medalSVG(m) {
+  return `<svg viewBox="0 0 64 74" aria-hidden="true"><path d="M20 0h10l6 22H26zM34 0h10l-6 22H28z" fill="#2f6fd0"/><path d="M30 0h4l2 22h-8z" fill="#e8553f"/>
+  <circle cx="32" cy="46" r="24" fill="${m.col}" stroke="#fff" stroke-width="3"/><circle cx="32" cy="46" r="18" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
+  <text x="32" y="${m.sym.length > 1 ? 53 : 55}" text-anchor="middle" font-size="${m.sym.length > 1 ? 18 : 24}" font-weight="900" fill="#fff" font-family="Arial, sans-serif">${m.sym}</text></svg>`;
+}
+const starSVG = (on = true) => `<svg viewBox="0 0 24 24" aria-hidden="true"${on ? '' : ' style="opacity:.25;filter:grayscale(1)"'}><use href="#starArt"/></svg>`;
+const ICON = {
+  add: '<svg viewBox="0 0 40 40"><rect x="4" y="14" width="32" height="12" rx="2" fill="#b0763a"/><path d="M12 14v12M20 14v12M28 14v12" stroke="#8a5525" stroke-width="2"/><circle cx="8" cy="20" r="1.4" fill="#5b3a17"/><circle cx="32" cy="20" r="1.4" fill="#5b3a17"/></svg>',
+  sub: '<svg viewBox="0 0 40 40"><circle cx="20" cy="23" r="12" fill="#e8402f"/><path d="M20 12c0-4 2-6 5-7" stroke="#6b3e17" stroke-width="2.5" fill="none"/><path d="M21 10c4-4 9-3 10 0-4 2-7 2-10 0z" fill="#3c9b45"/><circle cx="15" cy="19" r="3" fill="#ff8f80"/></svg>',
+  mul: '<svg viewBox="0 0 40 40"><path d="M7 17h26l-3 16H10z" fill="#c78a45" stroke="#8a5525" stroke-width="2"/><path d="M12 17c0-8 16-8 16 0" stroke="#8a5525" stroke-width="2.5" fill="none"/><circle cx="15" cy="16" r="4" fill="#ffb02e"/><circle cx="23" cy="15" r="4" fill="#ff7a2e"/></svg>',
+  div: '<svg viewBox="0 0 40 40"><path d="M20 34S5 25 5 15a7.5 7.5 0 0 1 15-2 7.5 7.5 0 0 1 15 2c0 10-15 19-15 19z" fill="#ff5d7e"/><circle cx="14" cy="14" r="3" fill="#ffc0cd"/></svg>'
+};
+
+/* =========================================================
+   Mapa de la isla (SVG propio que cambia con los avances)
+   ========================================================= */
+function drawMap() {
+  const ch = prof.chapters, all = OPS.every(o => ch[o] >= 3);
+  const flowersN = Math.min(prof.totalMissions, 24);
+  const fpos = [[150,70],[185,60],[230,58],[248,120],[170,170],[230,175],[95,150],[310,150],[140,250],[255,262],[205,255],[75,175],[330,175],[200,92],[120,128],[285,135],[180,215],[220,210],[160,105],[245,95],[100,185],[300,180],[195,270],[135,190]];
+  const flowerCols = ['#ff6f91', '#ffd23f', '#fff', '#c58cff', '#ff9f43'];
+  let s = `<defs><radialGradient id="seaG" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#7fe0f2"/><stop offset="1" stop-color="#1f9cc4"/></radialGradient></defs>
+  <rect width="400" height="300" rx="14" fill="url(#seaG)"/>
+  <g stroke="#fff" stroke-opacity=".55" stroke-width="2.5" fill="none" stroke-linecap="round"><path d="M18 40q8-6 16 0t16 0"/><path d="M350 30q8-6 16 0t16 0"/><path d="M20 260q8-6 16 0t16 0"/><path d="M345 270q8-6 16 0t16 0"/><path d="M190 18q8-6 16 0t16 0"/></g>
+  ${all ? '<g fill="none" stroke-width="7" opacity=".85"><path d="M60 150 A140 125 0 0 1 340 150" stroke="#ff6f59"/><path d="M68 150 A132 117 0 0 1 332 150" stroke="#ffc23d"/><path d="M76 150 A124 109 0 0 1 324 150" stroke="#5ccf6b"/><path d="M84 150 A116 101 0 0 1 316 150" stroke="#4aa3ff"/></g>' : ''}
+  <path d="M58 152 C38 92 92 38 162 44 C222 20 304 30 344 82 C384 124 372 204 332 242 C292 282 200 288 138 268 C78 252 68 204 58 152Z" fill="#ffe08a"/>
+  <path d="M74 152 C58 100 104 56 164 60 C220 40 296 50 330 92 C362 128 352 196 318 228 C284 262 204 268 146 252 C94 238 84 196 74 152Z" fill="#8fd16a"/>
+  <path d="M86 44 C100 62 118 72 120 90 C122 108 140 120 168 128" stroke="#3aa7e0" stroke-width="13" fill="none" stroke-linecap="round"/>
+  <ellipse cx="176" cy="132" rx="16" ry="9" fill="#3aa7e0"/>`;
+  // Puente (sumas)
+  s += '<g>';
+  s += '<rect x="99" y="76" width="5" height="22" fill="#7a4a1f"/><rect x="137" y="76" width="5" height="22" fill="#7a4a1f"/>';
+  if (ch.add >= 1) { s += '<rect x="100" y="81" width="42" height="11" fill="#c08a4a" stroke="#7a4a1f" stroke-width="1.5"/>'; for (let x = 106; x < 140; x += 6) s += `<line x1="${x}" y1="81" x2="${x}" y2="92" stroke="#7a4a1f" stroke-width="1"/>`; }
+  else s += '<rect x="100" y="81" width="9" height="11" fill="#c08a4a" stroke="#7a4a1f"/><rect x="132" y="81" width="9" height="11" fill="#c08a4a" stroke="#7a4a1f" transform="rotate(12 136 86)"/>';
+  if (ch.add >= 2) s += '<g stroke="#7a4a1f" stroke-width="2"><line x1="100" y1="78" x2="142" y2="78"/><line x1="100" y1="95" x2="142" y2="95"/><line x1="114" y1="75" x2="114" y2="81"/><line x1="128" y1="75" x2="128" y2="81"/></g>';
+  if (ch.add >= 3) s += '<line x1="101" y1="76" x2="101" y2="62" stroke="#7a4a1f" stroke-width="2"/><path d="M101 62 l12 4 l-12 4z" fill="#e8553f"/><line x1="140" y1="76" x2="140" y2="62" stroke="#7a4a1f" stroke-width="2"/><path d="M140 62 l12 4 l-12 4z" fill="#4aa3ff"/>';
+  s += '</g>';
+  // Bosque (restas)
+  s += '<g><rect x="262" y="78" width="6" height="20" fill="#7a4a1f"/><circle cx="265" cy="70" r="17" fill="#2f8f45"/>';
+  if (ch.sub >= 1) [[257,64],[270,62],[262,76],[274,74],[252,72]].forEach(([x, y]) => { s += `<circle cx="${x}" cy="${y}" r="3.4" fill="#e8402f"/>`; });
+  s += '<path d="M308 100 C306 84 308 70 312 58" stroke="#8a5a2a" stroke-width="5" fill="none"/><g fill="#3fae4e"><path d="M312 58 q-18 -6 -26 6 q14 -4 26 -6z"/><path d="M312 58 q18 -8 26 4 q-14 -4 -26 -4z"/><path d="M312 58 q-6 -16 -20 -14 q12 4 20 14z"/><path d="M312 58 q8 -16 22 -12 q-14 2 -22 12z"/></g>';
+  if (ch.sub >= 2) s += '<circle cx="308" cy="62" r="3.6" fill="#7a4a1f"/><circle cx="315" cy="63" r="3.6" fill="#7a4a1f"/>';
+  s += '<ellipse cx="333" cy="110" rx="13" ry="8" fill="#2f8f45"/>';
+  if (ch.sub >= 3) [[327,108],[334,106],[339,111],[331,113]].forEach(([x, y]) => { s += `<circle cx="${x}" cy="${y}" r="2.6" fill="#ff3b5c"/>`; });
+  s += '<circle cx="240" cy="88" r="10" fill="#3fae4e"/><rect x="238" y="96" width="4" height="8" fill="#7a4a1f"/></g>';
+  // Mercado (multiplicaciones)
+  s += '<g><rect x="88" y="200" width="56" height="26" fill="#d9a066" stroke="#8a5525" stroke-width="2"/><rect x="86" y="180" width="60" height="4" fill="#8a5525"/>';
+  for (let i = 0; i < 6; i++) s += `<path d="M${86 + i * 10} 184 h10 v8 a5 5 0 0 1 -10 0z" fill="${i % 2 ? '#fff' : '#e8553f'}"/>`;
+  s += '<line x1="90" y1="184" x2="90" y2="200" stroke="#8a5525" stroke-width="2"/><line x1="142" y1="184" x2="142" y2="200" stroke="#8a5525" stroke-width="2"/>';
+  for (let i = 0; i < Math.min(ch.mul, 3); i++) { const x = 96 + i * 16; s += `<path d="M${x} 200 h12 l-2 9 h-8z" fill="#c78a45" stroke="#8a5525"/><circle cx="${x + 4}" cy="199" r="3" fill="${['#ffb02e', '#a0522d', '#ffe14d'][i]}"/><circle cx="${x + 8}" cy="198" r="3" fill="${['#ff7a2e', '#8b4513', '#ffd000'][i]}"/>`; }
+  s += '</g>';
+  // Refugio (repartos)
+  s += '<g stroke="#a06a35" stroke-width="2.5"><line x1="262" y1="222" x2="338" y2="222"/><line x1="262" y1="234" x2="338" y2="234"/>';
+  for (let x = 264; x <= 338; x += 12) s += `<line x1="${x}" y1="216" x2="${x}" y2="240"/>`;
+  s += '</g><path d="M300 196 l18 -14 l18 14z" fill="#e8553f"/><rect x="304" y="196" width="28" height="20" fill="#f5d9a8" stroke="#a06a35" stroke-width="1.5"/><rect x="314" y="203" width="8" height="13" fill="#a06a35"/>';
+  if (ch.div >= 1) s += '<g><ellipse cx="276" cy="210" rx="8" ry="6" fill="#fff" stroke="#bbb"/><circle cx="283" cy="205" r="4.5" fill="#fff" stroke="#bbb"/><ellipse cx="282" cy="196" rx="1.8" ry="5" fill="#fff" stroke="#bbb"/><ellipse cx="286" cy="196" rx="1.8" ry="5" fill="#fff" stroke="#bbb"/><circle cx="284.5" cy="204" r="1" fill="#333"/></g>';
+  if (ch.div >= 2) s += '<g><ellipse cx="288" cy="250" rx="11" ry="7" fill="#4c9a3f"/><path d="M280 250 l8 -5 l8 5 l-8 5z" fill="#78c25e"/><circle cx="301" cy="250" r="4" fill="#8fbf6a"/><circle cx="302.5" cy="249" r=".9" fill="#222"/></g>';
+  if (ch.div >= 3) s += '<g><circle cx="346" cy="208" r="6" fill="#ffd23f"/><path d="M352 207 l5 1.5 l-5 1.5z" fill="#ff9f1c"/><circle cx="348" cy="206" r="1" fill="#222"/><path d="M341 209 q4 4 8 0" fill="#f3b800"/></g>';
+  // Cabaña de Kiko
+  s += '<g><rect x="186" y="146" width="30" height="22" fill="#f5d9a8" stroke="#a06a35" stroke-width="1.5"/><path d="M180 148 l21 -18 l21 18z" fill="#c9692c"/><rect x="197" y="155" width="8" height="13" fill="#a06a35"/><line x1="216" y1="130" x2="216" y2="112" stroke="#7a4a1f" stroke-width="2"/><path d="M216 112 l14 5 l-14 5z" fill="' + (all ? '#ffc23d' : '#2fb36a') + '"/></g>';
+  for (let i = 0; i < flowersN; i++) { const [x, y] = fpos[i], c = flowerCols[i % flowerCols.length]; s += `<g><circle cx="${x - 2.5}" cy="${y}" r="2.6" fill="${c}"/><circle cx="${x + 2.5}" cy="${y}" r="2.6" fill="${c}"/><circle cx="${x}" cy="${y - 2.5}" r="2.6" fill="${c}"/><circle cx="${x}" cy="${y + 2.5}" r="2.6" fill="${c}"/><circle cx="${x}" cy="${y}" r="1.8" fill="#ffb300"/></g>`; }
+  // Zonas pulsables y etiquetas
+  const Z = {add: [120, 88, 152, 66], sub: [290, 85, 292, 128], mul: [116, 210, 116, 252], div: [305, 225, 300, 270]};
+  for (const o of OPS) {
+    const [cx, cy, lx, ly] = Z[o], label = `${ZONES[o].op}`, w = label.length * 7.2 + 30;
+    s += `<circle class="zone-hit" data-op="${o}" cx="${cx}" cy="${cy}" r="44" fill="transparent" tabindex="0" role="button" aria-label="${ZONES[o].name}: ${label}"/>`;
+    s += `<g class="zl"><rect x="${lx - w / 2}" y="${ly - 11}" width="${w}" height="22" rx="11" fill="#fff" stroke="${({add: '#e8553f', sub: '#2f8f45', mul: '#7a4cc4', div: '#11729f'})[o]}" stroke-width="2.5"/><text x="${lx}" y="${ly + 4.5}" text-anchor="middle" font-size="12.5" font-weight="800" fill="#1d2f44" font-family="Trebuchet MS, Arial, sans-serif">${SIGN[o]} ${label}</text></g>`;
+  }
+  const svg = $('#mapSvg'); svg.innerHTML = s;
+  svg.querySelectorAll('.zone-hit').forEach(el => {
+    el.addEventListener('click', () => startMission(el.dataset.op));
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startMission(el.dataset.op); } });
+  });
+}
+
+/* =========================================================
+   Pantallas
+   ========================================================= */
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => { s.hidden = s.id !== id; });
+  window.scrollTo(0, 0);
+}
+const say = (name) => esc(name);
+
+function showProfiles(forceNew) {
+  const order = Store.data.order.filter(id => Store.data.profiles[id]);
+  const list = $('#plist'); list.innerHTML = '';
+  for (const id of order) {
+    const p = Store.data.profiles[id];
+    const card = document.createElement('div'); card.className = 'pcard';
+    card.innerHTML = `<button class="pbtn" data-id="${id}"><span class="avatar" style="background:${p.color}">${esc((p.name || '?').charAt(0).toUpperCase())}</span><span style="min-width:0"><span class="pname">${esc(p.name)}</span><br><span class="small muted">${p.age > 12 ? 'Más de 12 años' : p.age + ' años'} · ★ ${p.stars || 0}</span></span></button><button class="pdel" data-del="${id}" aria-label="Borrar el perfil de ${esc(p.name)}">Borrar</button>`;
+    list.appendChild(card);
+  }
+  const has = order.length > 0;
+  $('#profileListCard').hidden = !has;
+  $('#newTitle').textContent = has ? '¿Eres nuevo? Crea tu perfil' : 'Nuevo explorador';
+  $('#cancelNew').hidden = true;
+  resetNewForm();
+  show('s-profiles');
+  if (forceNew) $('#pname').focus();
+}
+let chosenAge = null;
+function resetNewForm() {
+  $('#pname').value = ''; chosenAge = null; $('#perr').textContent = '';
+  document.querySelectorAll('.age').forEach(b => b.setAttribute('aria-pressed', 'false'));
+}
+function buildAges() {
+  const box = $('#ages');
+  for (let a = 5; a <= 12; a++) box.insertAdjacentHTML('beforeend', `<button type="button" class="age" data-age="${a}" aria-pressed="false">${a}</button>`);
+  box.insertAdjacentHTML('beforeend', '<button type="button" class="age wide" data-age="13" aria-pressed="false">Más de 12</button>');
+  box.addEventListener('click', e => {
+    const b = e.target.closest('.age'); if (!b) return;
+    chosenAge = Number(b.dataset.age); // 13 = «más de 12», usa el nivel de 12
+    box.querySelectorAll('.age').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  });
+}
+
+function showMap() {
+  $('#mAvatar').textContent = prof.name.charAt(0).toUpperCase();
+  $('#mAvatar').style.background = prof.color;
+  $('#mName').textContent = prof.name;
+  $('#mStars').textContent = prof.stars;
+  const all = OPS.every(o => prof.chapters[o] >= 3);
+  $('#islandDone').hidden = !all;
+  const pending = OPS.find(o => prof.current[o]);
+  let msg;
+  if (all) msg = `¡${say(prof.name)}, has completado la isla! Puedes seguir jugando: siempre hay retos nuevos.`;
+  else if (pending) msg = `¡Hola, ${say(prof.name)}! Tienes una misión a medias en ${ZONES[pending].name}. ¿Seguimos?`;
+  else if (prof.totalMissions === 0) msg = `¡Hola, ${say(prof.name)}! Soy Kiko. La isla necesita ayuda. Elige una zona para empezar.`;
+  else msg = `¡Hola otra vez, ${say(prof.name)}! ¿Qué zona quieres visitar?`;
+  $('#mapSay').innerHTML = msg;
+  drawMap();
+  const zb = $('#zones'); zb.innerHTML = '';
+  for (const o of OPS) {
+    const z = ZONES[o], c = prof.chapters[o], cur = prof.current[o];
+    let stars = ''; for (let i = 0; i < 3; i++) stars += starSVG(i < c);
+    const b = document.createElement('button'); b.className = 'zbtn'; b.dataset.op = o;
+    b.innerHTML = `<span class="zsign" style="background:${OPCOLOR[o]}">${SIGN[o]}</span><span class="zinfo"><b>${z.op}</b><span class="zmeta">${z.name}</span><span class="zmeta"><span class="chstars" aria-label="${c} de 3 misiones">${stars}</span> · Nivel ${prof.skills[o].level}</span>${cur ? `<span class="tag">Misión a medias: ${Math.min(cur.idx, MISSION_LEN)} de ${MISSION_LEN}</span>` : (c >= 3 ? '<span class="tag">¡Zona completa! Juega más</span>' : '')}</span>`;
+    b.addEventListener('click', () => startMission(o));
+    zb.appendChild(b);
+  }
+  show('s-map');
+}
+
+function showMedals() {
+  $('#medTitle').textContent = `Medallas de ${prof.name} · ★ ${prof.stars}`;
+  const lv = $('#levels'); lv.innerHTML = '';
+  for (const o of OPS) {
+    const s = prof.skills[o];
+    lv.insertAdjacentHTML('beforeend', `<div class="lvl"><span class="zsign" style="background:${OPCOLOR[o]}">${SIGN[o]}</span><div style="flex:1; min-width:0"><b>${ZONES[o].op}</b><div class="small muted">Nivel ${s.level} de ${MAXLEVEL} · ${s.solved} resueltos</div><div class="meter"><i style="width:${s.level * 10}%"></i></div></div></div>`);
+  }
+  const g = $('#medalGrid'); g.innerHTML = '';
+  for (const m of MEDALS) {
+    const has = prof.medals.includes(m.id);
+    g.insertAdjacentHTML('beforeend', `<div class="medal${has ? '' : ' locked'}">${medalSVG(m)}<b>${m.name}</b><span>${has ? '¡Conseguida!' : m.desc}</span></div>`);
+  }
+  show('s-medals');
+}
+
+/* =========================================================
+   Misiones y ejercicios
+   ========================================================= */
+let M = null;        // misión en curso
+let input = '';
+let busy = false;    // evita dobles pulsaciones al comprobar / avanzar
+let lockUntil = 0;
+let guideSteps = [], guideIdx = 0;
+
+function startMission(op) {
+  if (!prof) return;
+  if (prof.current[op] && !prof.current[op].rewarded) { M = prof.current[op]; }
+  else {
+    const chap = prof.chapters[op] < 3 ? prof.chapters[op] + 1 : 0;
+    M = {id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), op, chapter: chap,
+      free: chap ? null : pick(ZONES[op].free), tpl: chap ? chap - 1 : -1, idx: 0, stars: 0, results: [],
+      pendingLike: null, problem: null, practice: false, ex: null, rewarded: false};
+    prof.current[op] = M;
+    nextProblem(true);
+    return;
+  }
+  input = ''; busy = false;
+  renderMission();
+  show('s-mission');
+}
+function nextProblem(first) {
+  const op = M.op, sk = prof.skills[op];
+  const like = M.pendingLike;
+  const level = like ? like.level : sk.level;
+  const p = makeProblem(op, level, prof.recent[op].slice(-3), like);
+  M.problem = p; M.practice = !!like; M.pendingLike = null;
+  M.ex = {attempts: 0, hint: false, guided: false, solved: false, wrongs: [], view: 'none', stars: 0, levelMsg: null};
+  M.tplNow = M.tpl >= 0 ? M.tpl : ri(0, 2);
+  prof.recent[op].push(p.key); if (prof.recent[op].length > 8) prof.recent[op].shift();
+  input = ''; busy = false;
+  Store.save();
+  renderMission();
+  if (first) show('s-mission');
+}
+function renderMission() {
+  const z = ZONES[M.op], p = M.problem, ex = M.ex;
+  $('#mTitle').textContent = z.op;
+  $('#storyTitle').textContent = M.chapter ? `Misión ${M.chapter} de 3: ${z.chapters[M.chapter - 1].title}` : `Misión libre: ${M.free}`;
+  const st = $('#story'); st.style.background = OPCOLOR[M.op];
+  $('#storyText').textContent = M.chapter ? z.chapters[M.chapter - 1].intro : `${z.name}: ¡más retos nuevos para ${prof.name}!`;
+  const done = Math.min(M.idx, MISSION_LEN);
+  $('#progLabel').textContent = M.practice ? 'Uno parecido para practicar' : `Ejercicio ${Math.min(M.idx + (ex.solved ? 0 : 1), MISSION_LEN)} de ${MISSION_LEN}`;
+  let sc = '';
+  for (let i = 0; i < MISSION_LEN; i++) sc += `<span class="slot${i < done ? '' : ' off'}">${ICON[M.op]}</span>`;
+  if (M.idx >= MISSION_LEN && (M.practice || M.pendingLike)) sc += `<span class="slot extra${ex.solved && M.practice ? '' : ' off'}">${ICON[M.op]}</span>`;
+  $('#scene').innerHTML = sc;
+  $('#ptext').textContent = z.tpl[M.tplNow](p.a, p.b);
+  $('#exprText').textContent = `${p.a} ${SIGN[p.op]} ${p.b}`;
+  renderAnswer();
+  renderFeedback();
+  const solved = ex.solved;
+  document.querySelectorAll('#pad .key').forEach(k => { k.disabled = solved; });
+  $('#checkBtn').textContent = solved ? (missionDone() ? '¡Terminar misión!' : 'Siguiente →') : 'Comprobar';
+  $('#helpBtn').disabled = solved;
+}
+function missionDone() { return M.idx >= MISSION_LEN && !M.pendingLike; }
+function renderAnswer() {
+  const el = $('#answer'), ex = M.ex;
+  el.textContent = ex.solved ? String(M.problem.ans) : input;
+  el.classList.toggle('empty', !ex.solved && input === '');
+  el.classList.toggle('caret', !ex.solved);
+  el.classList.toggle('ok', ex.solved);
+}
+function kikoLine(html) { return `<div class="kline"><svg class="kiko" viewBox="0 0 100 100" aria-hidden="true"><use href="#kikoArt"/></svg><div>${html}</div></div>`; }
+function renderFeedback() {
+  const f = $('#feedback'), ex = M.ex, p = M.problem, name = say(prof.name);
+  if (ex.view === 'none') { f.innerHTML = ''; return; }
+  if (ex.view === 'empty') { f.innerHTML = `<div class="fb note">${kikoLine(`<p>Escribe tu respuesta con los números y pulsa «Comprobar».</p>`)}</div>`; return; }
+  if (ex.view === 'correct') {
+    const praise = ex.guided ? `¡Muy bien, ${name}! Ahora ya sabes cómo se hace.` :
+      (ex.attempts === 0 && !ex.hint ? pick([`¡Genial, ${name}!`, `¡Lo has clavado, ${name}!`, `¡Muy bien, ${name}!`, `¡Perfecto, ${name}!`]) : `¡Lo has conseguido, ${name}! Aprender con ayuda también cuenta.`);
+    let extra = '';
+    if (ex.guided) extra = `<p>Ahora te propongo uno parecido, con otros números, para que practiques lo que has aprendido.</p>`;
+    let stars = ''; for (let i = 0; i < 3; i++) stars += starSVG(i < ex.stars);
+    const lvl = ex.levelMsg ? `<p class="levelup">¡Nivel ${prof.skills[p.op].level} de ${ZONES[p.op].op.toLowerCase()}! Los próximos retos serán un poco más grandes.</p>` : '';
+    f.innerHTML = `<div class="fb good">${kikoLine(`<p class="lead">${praise}</p><p>${p.a} ${SIGN[p.op]} ${p.b} = ${p.ans}</p><div class="starsrow" aria-label="${ex.stars} estrellas">${stars}</div>${extra}${lvl}`)}</div>`;
+    return;
+  }
+  const h = hintFor(p);
+  if (ex.view === 'hint') {
+    f.innerHTML = `<div class="fb help">${kikoLine(`<p class="lead">¡Claro, ${name}! Aquí tienes una pista.</p><p>${h.t}</p>`)}${h.v}<div class="row"><button class="btn step" data-act="guide">Vamos paso a paso</button></div></div>`;
+    return;
+  }
+  if (ex.view === 'guided') {
+    f.innerHTML = `<div class="fb note">${kikoLine(`<p class="lead">Hemos encontrado el resultado juntos.</p><p>Escribe ahora el resultado de ${p.a} ${SIGN[p.op]} ${p.b} y pulsa «Comprobar».</p>`)}<div class="row"><button class="btn ghost sm" data-act="guide">Ver otra vez los pasos</button></div></div>`;
+    return;
+  }
+  if (ex.view === 'guided-wrong') {
+    f.innerHTML = `<div class="fb note">${kikoLine(`<p class="lead">Casi, ${name}. Al final de los pasos salía ${p.ans}.</p><p>Escribe ${p.ans} y pulsa «Comprobar».</p>`)}<div class="row"><button class="btn ghost sm" data-act="guide">Ver otra vez los pasos</button></div></div>`;
+    return;
+  }
+  // wrong
+  const last = ex.wrongs[ex.wrongs.length - 1];
+  const obs = analyze(p, last).map(t => `<p>${t}</p>`).join('');
+  if (ex.attempts === 1) {
+    f.innerHTML = `<div class="fb help">${kikoLine(`<p class="lead">¡Buen intento, ${name}! Has escrito ${last}, pero todavía no es.</p>${obs}<p><b>Pista:</b> ${h.t}</p>`)}${h.v}<p>Vuelve a intentarlo con el mismo ejercicio.</p></div>`;
+  } else {
+    f.innerHTML = `<div class="fb help">${kikoLine(`<p class="lead">Sigue así, ${name}. Equivocarse también es aprender. Has escrito ${last}.</p>${obs}<p>¿Lo resolvemos juntos?</p>`)}<div class="row"><button class="btn step" data-act="guide">Vamos paso a paso</button><span class="muted small">o vuelve a intentarlo</span></div>${h.v}<p><b>Pista:</b> ${h.t}</p></div>`;
+  }
+}
+
+function press(k) {
+  if (!M || M.ex.solved || !$('#guide').hidden) return;
+  if (k === 'del') input = input.slice(0, -1);
+  else if (/^\d$/.test(k)) { if (input.length < 4) input = (input === '0' ? '' : input) + k; }
+  if (M.ex.view === 'empty') { M.ex.view = 'none'; renderFeedback(); }
+  renderAnswer();
+}
+function check() {
+  if (!M || busy) return;
+  const ex = M.ex;
+  if (ex.solved) { if (Date.now() >= lockUntil) advance(); return; }
+  if (input === '') { ex.view = 'empty'; renderFeedback(); return; }
+  busy = true;
+  const ans = Number(input), p = M.problem;
+  if (ans === p.ans) onCorrect();
+  else onWrong(ans);
+  busy = false;
+}
+function onCorrect() {
+  const ex = M.ex, op = M.op;
+  ex.solved = true;
+  ex.stars = ex.guided ? 1 : (ex.attempts === 0 && !ex.hint ? 3 : 2);
+  ex.levelMsg = adapt(op, ex);
+  if (ex.guided) { prof.guidedDone++; if (M.idx < MISSION_LEN) M.pendingLike = M.problem; } // tras la guía, uno parecido (solo una práctica extra al final)
+  else if (ex.attempts > 0) prof.helpWins++;
+  M.idx++; M.stars += ex.stars; prof.stars += ex.stars; prof.zoneStars[op] += ex.stars;
+  M.results.push({key: M.problem.key, stars: ex.stars, attempts: ex.attempts, hint: ex.hint, guided: ex.guided, practice: M.practice});
+  ex.view = 'correct';
+  input = '';
+  lockUntil = Date.now() + 700; // un doble toque en «Comprobar» no salta el ejercicio
+  Store.save();
+  renderMission();
+}
+function onWrong(ans) {
+  const ex = M.ex;
+  if (ex.guided) { ex.view = 'guided-wrong'; input = ''; renderAnswer(); renderFeedback(); return; }
+  ex.attempts++; ex.wrongs.push(ans); ex.view = 'wrong';
+  input = '';
+  Store.save();
+  renderAnswer(); renderFeedback();
+  $('#feedback').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest'});
+}
+// Ajuste de dificultad independiente para cada operación
+function adapt(op, ex) {
+  const s = prof.skills[op];
+  s.solved++;
+  if (!ex.guided && !ex.hint && ex.attempts === 0) {
+    s.firstTry++; s.indep++; s.struggle = Math.max(0, s.struggle - 1);
+    if (s.indep >= 3 && s.level < MAXLEVEL) { s.level++; s.indep = 0; s.struggle = 0; return 'up'; }
+  } else {
+    s.indep = 0;                       // con ayuda (o copiando la solución mostrada) no cuenta como dominio
+    s.struggle += ex.guided ? 2 : 1;
+    if (s.struggle >= 4 && s.level > 1) { s.level--; s.struggle = 0; } // más sencillo, sin avisos negativos
+  }
+  return null;
+}
+function advance() {
+  if (busy) return; busy = true;
+  if (missionDone()) finishMission();
+  else nextProblem();
+}
+function finishMission() {
+  const m = M;
+  if (m.rewarded) { busy = false; return; }
+  m.rewarded = true;
+  const op = m.op, z = ZONES[op];
+  delete prof.current[op];
+  const rewards = [];
+  if (!prof.rewarded.includes(m.id)) {
+    prof.rewarded.push(m.id); if (prof.rewarded.length > 200) prof.rewarded.shift();
+    prof.totalMissions++; prof.missions[op]++;
+    if (m.chapter && m.chapter > prof.chapters[op]) {
+      prof.chapters[op] = m.chapter;
+      rewards.push({icon: ICON[op], text: z.chapters[m.chapter - 1].item});
+    }
+    if (prof.totalMissions <= 24) rewards.push({icon: '<svg viewBox="0 0 40 40"><g fill="#ff6f91"><circle cx="14" cy="20" r="7"/><circle cx="26" cy="20" r="7"/><circle cx="20" cy="14" r="7"/><circle cx="20" cy="26" r="7"/></g><circle cx="20" cy="20" r="5" fill="#ffb300"/></svg>', text: 'Ha brotado una flor nueva en la isla.'});
+    for (const md of MEDALS) if (!prof.medals.includes(md.id) && md.test(prof)) { prof.medals.push(md.id); rewards.push({icon: medalSVG(md), text: `¡Nueva medalla: ${md.name}!`}); }
+  }
+  Store.save();
+  $('#winTitle').textContent = `¡Misión cumplida, ${prof.name}!`;
+  $('#winText').textContent = `Has ganado ${N(m.stars, 'estrella')} en ${m.chapter ? z.chapters[m.chapter - 1].title.toLowerCase() : m.free.toLowerCase()}.`;
+  $('#winStars').innerHTML = `<span class="pill">${starSVG()}<span id="winStarCount">+${m.stars}</span></span><span class="pill">Total: ${prof.stars}</span>`;
+  $('#winRewards').innerHTML = rewards.map(r => `<div class="reward">${r.icon}<b>${r.text}</b></div>`).join('') +
+    (rewards.some(r => r.text.includes('Isla completa')) ? '<div class="reward"><b>¡Has salvado toda la isla! Sigue jugando: siempre habrá misiones nuevas.</b></div>' : '');
+  M = null; busy = false;
+  show('s-win');
+  confetti();
+  $('#again').dataset.op = op;
+}
+function confetti() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c = document.createElement('div'); c.className = 'confetti';
+  const cols = ['#e8553f', '#ffc23d', '#2f8f45', '#2f6fd0', '#7a4cc4', '#ff6f91'];
+  for (let i = 0; i < 40; i++) { const e = document.createElement('i'); e.style.left = Math.random() * 100 + '%'; e.style.background = pick(cols); e.style.animationDelay = Math.random() * 0.8 + 's'; c.appendChild(e); }
+  document.body.appendChild(c); setTimeout(() => c.remove(), 3500);
+}
+
+/* ---------- Ayuda y guía ---------- */
+function askHelp() {
+  if (!M || M.ex.solved) return;
+  M.ex.hint = true;
+  if (M.ex.view !== 'guided' && M.ex.view !== 'guided-wrong') M.ex.view = 'hint';
+  Store.save();
+  renderFeedback();
+  $('#feedback').scrollIntoView({behavior: 'auto', block: 'nearest'});
+}
+function openGuide() {
+  if (!M || M.ex.solved) return;
+  M.ex.guided = true; M.ex.hint = true;
+  Store.save();
+  guideSteps = stepsFor(M.problem); guideIdx = 0;
+  $('#gTitle').textContent = `Vamos paso a paso: ${M.problem.a} ${SIGN[M.op]} ${M.problem.b}`;
+  $('#guide').hidden = false;
+  renderGuide();
+  $('#gNext').focus();
+}
+function renderGuide() {
+  const s = guideSteps[guideIdx];
+  $('#gDots').innerHTML = guideSteps.map((_, i) => `<i class="${i <= guideIdx ? 'on' : ''}"></i>`).join('') + `<span class="small muted" style="margin-left:8px">Paso ${guideIdx + 1} de ${guideSteps.length}</span>`;
+  $('#gText').textContent = s.t;
+  $('#gVis').innerHTML = s.v;
+  $('#gPrev').disabled = guideIdx === 0;
+  $('#gNext').textContent = guideIdx === guideSteps.length - 1 ? '¡Ahora lo escribo yo!' : 'Siguiente paso →';
+}
+function guideNext() {
+  if (guideIdx < guideSteps.length - 1) { guideIdx++; renderGuide(); }
+  else closeGuide(true);
+}
+function closeGuide(finished) {
+  $('#guide').hidden = true;
+  if (M && !M.ex.solved) { M.ex.view = 'guided'; input = ''; renderAnswer(); renderFeedback(); }
+}
+
+/* =========================================================
+   Eventos
+   ========================================================= */
+function bind() {
+  buildAges();
+  $('#newProfile').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = $('#pname').value.trim().replace(/\s+/g, ' ').slice(0, 16);
+    if (!name) { $('#perr').textContent = 'Escribe tu nombre para empezar.'; $('#pname').focus(); return; }
+    if (!chosenAge) { $('#perr').textContent = 'Elige cuántos años tienes.'; return; }
+    const p = newProfile(name, chosenAge);
+    Store.data.profiles[p.id] = p; Store.data.order.push(p.id);
+    Store.save();
+    selectProfile(p.id);
+  });
+  $('#plist').addEventListener('click', e => {
+    const b = e.target.closest('.pbtn'); if (b) { selectProfile(b.dataset.id); return; }
+    const d = e.target.closest('.pdel'); if (d) askDelete(d.dataset.del);
+  });
+  $('#toProfiles').addEventListener('click', () => { prof = null; M = null; showProfiles(); });
+  $('#toMedals').addEventListener('click', showMedals);
+  $('#medalsBack').addEventListener('click', showMap);
+  $('#backMap').addEventListener('click', () => { M = null; input = ''; showMap(); });
+  $('#winMap').addEventListener('click', showMap);
+  $('#again').addEventListener('click', e => startMission(e.currentTarget.dataset.op));
+  $('#surprise').addEventListener('click', () => startMission(pick(OPS)));
+  $('#pad').addEventListener('click', e => { const k = e.target.closest('.key'); if (k) press(k.dataset.k); });
+  $('#checkBtn').addEventListener('click', check);
+  $('#helpBtn').addEventListener('click', askHelp);
+  $('#feedback').addEventListener('click', e => { if (e.target.closest('[data-act="guide"]')) openGuide(); });
+  $('#gNext').addEventListener('click', guideNext);
+  $('#gPrev').addEventListener('click', () => { if (guideIdx > 0) { guideIdx--; renderGuide(); } });
+  $('#gClose').addEventListener('click', () => closeGuide(false));
+  $('#cNo').addEventListener('click', () => { $('#confirm').hidden = true; });
+  document.addEventListener('keydown', e => {
+    if (!$('#confirm').hidden) { if (e.key === 'Escape') $('#confirm').hidden = true; return; }
+    if (!$('#guide').hidden) {
+      if (e.key === 'Escape') closeGuide(false);
+      else if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); guideNext(); }
+      else if (e.key === 'ArrowLeft' && guideIdx > 0) { guideIdx--; renderGuide(); }
+      return;
+    }
+    if ($('#s-mission').hidden || !M) return;
+    if (e.target.matches('input, textarea')) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (/^\d$/.test(e.key)) { e.preventDefault(); press(e.key); }
+    else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); press('del'); }
+    else if (e.key === 'Enter') {
+      const fb = e.target.closest && e.target.closest('button');
+      if (fb && !fb.closest('#pad')) return; // deja que actúe el botón enfocado (Ayuda, Mapa...)
+      e.preventDefault(); if (e.repeat) return; check();
+    }
+  });
+}
+let pendingDelete = null;
+function askDelete(id) {
+  const p = Store.data.profiles[id]; if (!p) return;
+  pendingDelete = id;
+  $('#cText').textContent = `¿Borrar el perfil de ${p.name}? Se perderán sus estrellas y medallas en este dispositivo.`;
+  $('#confirm').hidden = false; $('#cNo').focus();
+}
+$('#cYes').addEventListener('click', () => {
+  if (pendingDelete) {
+    delete Store.data.profiles[pendingDelete];
+    Store.data.order = Store.data.order.filter(x => x !== pendingDelete);
+    if (Store.data.lastId === pendingDelete) Store.data.lastId = null;
+    Store.save();
+  }
+  pendingDelete = null; $('#confirm').hidden = true; showProfiles();
+});
+
+/* =========================================================
+   Arranque
+   ========================================================= */
+Store.init();
+showStorageWarning();
+bind();
+showProfiles();
+</script>
+</body>
+</html>
